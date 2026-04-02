@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quiz Results</title>
+  <style>
+    body{margin:0;min-height:100vh;background:#000;color:#fff;font-family:Arial,sans-serif;
+         display:flex;align-items:center;justify-content:center;}
+    .container{width:min(760px,92vw);padding:20px 0;}
+    h1{font-size:38px;margin-bottom:6px;}
+    .score{font-size:22px;margin-bottom:28px;color:#8ab4ff;}
+    table{width:100%;border-collapse:collapse;font-size:16px;}
+    th{text-align:left;padding:8px 10px;border-bottom:1px solid #444;color:#aaa;}
+    td{padding:8px 10px;border-bottom:1px solid #222;vertical-align:top;}
+    .correct{color:#6fcf97;}
+    .wrong{color:#eb5757;}
+    a{color:#8ab4ff;text-decoration:underline;font-size:18px;display:block;margin-top:28px;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Results</h1>
+    <p class="score">Score: {{ score_percent }}%</p>
+    <table>
+      <thead>
+        <tr><th>Question</th><th>Your Answer</th><th>Correct Answer</th></tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        <tr class="{{ 'correct' if row.is_correct else 'wrong' }}">
+          <td>{{ row.question }}</td>
+          <td>{{ row.picked_text }}</td>
+          <td>{{ row.correct_text }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <a href="{{ url_for('flashcards.sample_history_start') }}">Try Again</a>
+    <a href="{{ url_for('flashcards.flashcards_home') }}">← Back to Flashcards</a>
+  </div>
+</body>
+</html>

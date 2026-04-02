@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Create Question</title>
+  <style>
+    body{margin:0;min-height:100vh;background:#000;color:#fff;font-family:Arial,sans-serif;
+         display:flex;align-items:center;justify-content:center;}
+    .container{width:min(600px,92vw);}
+    h1{font-size:36px;margin-bottom:6px;}
+    .count{font-size:16px;color:#aaa;margin-bottom:24px;}
+    label{display:block;font-size:16px;margin-bottom:4px;}
+    input[type=text],textarea{
+      width:100%;box-sizing:border-box;padding:10px;font-size:16px;
+      background:#111;color:#fff;border:1px solid #444;border-radius:4px;margin-bottom:16px;}
+    textarea{height:100px;resize:vertical;}
+    button{padding:10px 24px;font-size:16px;background:#8ab4ff;color:#000;
+           border:none;border-radius:4px;cursor:pointer;}
+    a{color:#8ab4ff;text-decoration:underline;font-size:16px;display:block;margin-top:20px;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Create Question</h1>
+    <p class="count">You have {{ card_count }} question(s) saved.</p>
+    <form method="post">
+      <label>Quiz Name</label>
+      <input type="text" name="quiz_name" required>
+      <label>Question</label>
+      <textarea name="question" required></textarea>
+      <button type="submit">Next: Add Choices →</button>
+    </form>
+    <a href="{{ url_for('flashcards.flashcards_menu') }}">← Back to Menu</a>
+  </div>
+</body>
+</html>
