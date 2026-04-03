@@ -3,7 +3,7 @@ import logging
 from flask import Flask
 from dotenv import load_dotenv
 
-load_dotenv()  # loads .env into os.environ before the factory reads it
+load_dotenv()
 
 _FALLBACK_SECRET = "dev-change-me"
 
@@ -13,7 +13,10 @@ def create_app(test_config=None):
 
     app.config.from_mapping(
         SECRET_KEY=os.environ.get("SECRET_KEY", _FALLBACK_SECRET),
-        DATABASE=os.path.join(app.instance_path, "flashcards.db"),
+        SQLALCHEMY_DATABASE_URI=(
+            "sqlite:///" + os.path.join(app.instance_path, "flashcards.db")
+        ),
+        SQLALCHEMY_TRACK_MODIFICATIONS=False,
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=not app.debug,

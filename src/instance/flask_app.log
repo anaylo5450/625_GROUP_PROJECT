@@ -7,3 +7,21 @@
 2026-04-02 19:25:55,322 [INFO] 127.0.0.1 - - [02/Apr/2026 19:25:55] "GET / HTTP/1.1" 200 -
 2026-04-02 19:25:55,522 [INFO] 127.0.0.1 - - [02/Apr/2026 19:25:55] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
 2026-04-02 19:25:57,518 [INFO] 127.0.0.1 - - [02/Apr/2026 19:25:57] "GET /flashcards/ HTTP/1.1" 200 -
+2026-04-02 20:00:00,871 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-04-02 20:00:00,871 [INFO] [33mPress CTRL+C to quit[0m
+2026-04-02 20:00:00,871 [INFO]  * Restarting with stat
+2026-04-02 20:00:01,063 [WARNING]  * Debugger is active!
+2026-04-02 20:00:01,064 [INFO]  * Debugger PIN: 346-949-175
+2026-04-02 20:00:09,801 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:09] "GET / HTTP/1.1" 200 -
+2026-04-02 20:00:11,381 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:11] "GET /flashcards/ HTTP/1.1" 200 -
+2026-04-02 20:00:14,524 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:14] "GET /flashcards/login HTTP/1.1" 200 -
+2026-04-02 20:00:16,753 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:16] "GET /flashcards/register HTTP/1.1" 200 -
+2026-04-02 20:00:25,691 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:25] "[32mPOST /flashcards/register HTTP/1.1[0m" 302 -
+2026-04-02 20:00:25,694 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:25] "GET /flashcards/login HTTP/1.1" 200 -
+2026-04-02 20:00:29,448 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:29] "[32mPOST /flashcards/login HTTP/1.1[0m" 302 -
+2026-04-02 20:00:29,451 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:29] "GET /flashcards/menu HTTP/1.1" 200 -
+2026-04-02 20:00:32,062 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:32] "GET /flashcards/history/create/question HTTP/1.1" 200 -
+2026-04-02 20:00:33,929 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:33] "GET /flashcards/menu HTTP/1.1" 200 -
+2026-04-02 20:00:35,766 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:35] "[32mGET /flashcards/logout HTTP/1.1[0m" 302 -
+2026-04-02 20:00:35,769 [INFO] 127.0.0.1 - - [02/Apr/2026 20:00:35] "GET /flashcards/ HTTP/1.1" 200 -

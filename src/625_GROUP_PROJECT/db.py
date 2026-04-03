@@ -1,63 +1,57 @@
-import sqlite3
-import os
 import click
-from flask import current_app, g
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Integer, String, ForeignKey
+
+db = SQLAlchemy()
 
 
-def get_db():
-    if "db" not in g:
-        g.db = sqlite3.connect(
-            current_app.config["DATABASE"],
-            detect_types=sqlite3.PARSE_DECLTYPES,
-        )
-        g.db.row_factory = sqlite3.Row
-        g.db.execute("PRAGMA foreign_keys = ON")
-    return g.db
+class User(db.Model):
+    __tablename__ = "users"
+
+    user_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    firstname: Mapped[str] = mapped_column(String, nullable=False)
+    lastname: Mapped[str] = mapped_column(String, nullable=False)
+    username: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    school: Mapped[str | None] = mapped_column(String, nullable=True)
+    password_hash: Mapped[str] = mapped_column(String, nullable=False)
 
 
-def close_db(e=None):
-    db = g.pop("db", None)
-    if db is not None:
-        db.close()
+class Deck(db.Model):
+    __tablename__ = "decks"
 
-
-def init_db():
-    db = get_db()
-    db.executescript(
-        """
-        CREATE TABLE IF NOT EXISTS users (
-            user_id       INTEGER PRIMARY KEY AUTOINCREMENT,
-            firstname     TEXT NOT NULL,
-            lastname      TEXT NOT NULL,
-            username      TEXT NOT NULL UNIQUE,
-            school        TEXT,
-            password_hash TEXT NOT NULL
-        );
-
-        CREATE TABLE IF NOT EXISTS flashcard_questions (
-            question_id    INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id        INTEGER NOT NULL,
-            quiz_name      TEXT NOT NULL,
-            question       TEXT NOT NULL,
-            choice1        TEXT NOT NULL,
-            choice2        TEXT NOT NULL,
-            choice3        TEXT NOT NULL,
-            choice4        TEXT NOT NULL,
-            correct_choice INTEGER NOT NULL,
-            FOREIGN KEY (user_id) REFERENCES users(user_id)
-        );
-        """
+    deck_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.user_id"), nullable=False
     )
-    db.commit()
+    title: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class FlashcardQuestion(db.Model):
+    __tablename__ = "flashcard_questions"
+
+    question_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("users.user_id"), nullable=False
+    )
+    quiz_name: Mapped[str] = mapped_column(String, nullable=False)
+    question: Mapped[str] = mapped_column(String, nullable=False)
+    choice1: Mapped[str] = mapped_column(String, nullable=False)
+    choice2: Mapped[str] = mapped_column(String, nullable=False)
+    choice3: Mapped[str] = mapped_column(String, nullable=False)
+    choice4: Mapped[str] = mapped_column(String, nullable=False)
+    correct_choice: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
 @click.command("init-db")
 def init_db_command():
     """Create database tables."""
-    init_db()
+    db.create_all()
     click.echo("Database initialised.")
 
 
 def init_app(app):
-    app.teardown_appcontext(close_db)
+    db.init_app(app)
     app.cli.add_command(init_db_command)
+    with app.app_context():
+        db.create_all()

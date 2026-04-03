@@ -21,6 +21,7 @@
     <h1>Flashcards</h1>
     <p class="subtitle">Choose an option.</p>
     <div class="menu">
+      <a href="{{ url_for('flashcards.deck_list') }}">My Decks</a>
       <a href="{{ url_for('flashcards.history_create_question') }}">Create / Edit Quiz Questions</a>
       <a href="{{ url_for('flashcards.sample_history_start') }}">Take Sample History Quiz</a>
       <a href="{{ url_for('flashcards.logout') }}">Logout</a>

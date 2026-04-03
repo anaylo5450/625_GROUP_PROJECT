@@ -1,11 +1,10 @@
 import logging
-from flask import (
-    render_template, request, redirect, url_for, session, current_app
-)
+from flask import render_template, request, redirect, url_for, session
+from sqlalchemy.exc import SQLAlchemyError, IntegrityError
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from . import bp
-from ..db import get_db, init_db
+from ..db import db, User, Deck, FlashcardQuestion
 
 logger = logging.getLogger(__name__)
 
@@ -18,24 +17,10 @@ def _require_login():
 
 
 def _get_question_count_for_user(user_id):
-    db = get_db()
-    row = db.execute(
-        "SELECT COUNT(*) AS cnt FROM flashcard_questions WHERE user_id = ?",
-        (user_id,),
-    ).fetchone()
-    return int(row["cnt"]) if row else 0
-
-
-# ---------------------------------------------------------------------------
-# Ensure tables exist on first request
-# ---------------------------------------------------------------------------
-
-@bp.before_app_request
-def _ensure_db():
-    try:
-        get_db().execute("SELECT 1 FROM users LIMIT 1")
-    except Exception:
-        init_db()
+    return db.session.execute(
+        db.select(db.func.count()).select_from(FlashcardQuestion)
+        .where(FlashcardQuestion.user_id == user_id)
+    ).scalar()
 
 
 # ---------------------------------------------------------------------------
@@ -63,25 +48,25 @@ def register():
         if not firstname or not lastname or not username or not password:
             return redirect(url_for("flashcards.register"))
 
-        db = get_db()
+        existing = db.session.execute(
+            db.select(User).where(User.username == username)
+        ).scalar_one_or_none()
 
-        if db.execute(
-            "SELECT user_id FROM users WHERE username = ?", (username,)
-        ).fetchone():
+        if existing:
             logger.info("Register blocked: username already exists: %s", username)
             return redirect(url_for("flashcards.register"))
 
         try:
-            db.execute(
-                """
-                INSERT INTO users (firstname, lastname, username, school, password_hash)
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                (firstname, lastname, username, school or None,
-                 generate_password_hash(password)),
-            )
-            db.commit()
-        except Exception as e:
+            db.session.add(User(
+                firstname=firstname,
+                lastname=lastname,
+                username=username,
+                school=school or None,
+                password_hash=generate_password_hash(password),
+            ))
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
             logger.exception("Registration error: %s", e)
             return redirect(url_for("flashcards.register"))
 
@@ -99,30 +84,21 @@ def login():
         if not username or not password:
             return redirect(url_for("flashcards.login"))
 
-        db = get_db()
-        user = db.execute(
-            """
-            SELECT user_id, firstname, lastname, username, password_hash
-            FROM users WHERE username = ?
-            """,
-            (username,),
-        ).fetchone()
+        user = db.session.execute(
+            db.select(User).where(User.username == username)
+        ).scalar_one_or_none()
 
-        if not user:
-            logger.info("Login failed: user not found: %s", username)
+        # Always run hash check to prevent username enumeration via timing
+        dummy = user.password_hash if user else generate_password_hash("x")
+        password_ok = check_password_hash(dummy, password)
+
+        if not user or not password_ok:
+            logger.info("Login failed for: %s", username)
             return redirect(url_for("flashcards.login"))
 
-        if not user["password_hash"]:
-            logger.info("Login failed: no password hash for %s", username)
-            return redirect(url_for("flashcards.login"))
-
-        if not check_password_hash(user["password_hash"], password):
-            logger.info("Login failed: bad password for %s", username)
-            return redirect(url_for("flashcards.login"))
-
-        session["user_id"]  = user["user_id"]
-        session["username"] = user["username"]
-        session["firstname"] = user["firstname"]
+        session["user_id"]   = user.user_id
+        session["username"]  = user.username
+        session["firstname"] = user.firstname
 
         return redirect(url_for("flashcards.flashcards_menu"))
 
@@ -200,7 +176,7 @@ SAMPLE_HISTORY = [
         "question": "Which document begins with 'We the People'?",
         "choices": [
             "Bill of Rights", "Constitution",
-            "Declaration of Independence", "Articles of Confederation"
+            "Declaration of Independence", "Articles of Confederation",
         ],
         "correct": 1,
     },
@@ -294,6 +270,45 @@ def sample_history_results():
 
 
 # ---------------------------------------------------------------------------
+# Decks (login required)
+# ---------------------------------------------------------------------------
+
+@bp.route("/decks")
+def deck_list():
+    if not _require_login():
+        return redirect(url_for("flashcards.login"))
+    decks = db.session.execute(
+        db.select(Deck)
+        .where(Deck.user_id == session["user_id"])
+        .order_by(Deck.deck_id.desc())
+    ).scalars().all()
+    return render_template("flashcards/deck_list.html", decks=decks)
+
+
+@bp.route("/decks/create", methods=["GET", "POST"])
+def deck_create():
+    if not _require_login():
+        return redirect(url_for("flashcards.login"))
+
+    if request.method == "POST":
+        title = (request.form.get("title") or "").strip()
+        if not title:
+            return redirect(url_for("flashcards.deck_create"))
+
+        try:
+            db.session.add(Deck(user_id=session["user_id"], title=title))
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
+            logger.exception("Deck create error: %s", e)
+            return redirect(url_for("flashcards.deck_create"))
+
+        return redirect(url_for("flashcards.deck_list"))
+
+    return render_template("flashcards/deck_create.html")
+
+
+# ---------------------------------------------------------------------------
 # Create quiz questions (login required)
 # ---------------------------------------------------------------------------
 
@@ -353,24 +368,20 @@ def history_create_choices():
         if correct_idx not in (0, 1, 2, 3):
             return redirect(url_for("flashcards.history_create_choices"))
 
-        db = get_db()
         try:
-            db.execute(
-                """
-                INSERT INTO flashcard_questions
-                    (user_id, quiz_name, question, choice1, choice2, choice3, choice4, correct_choice)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    session["user_id"],
-                    quiz_name,
-                    question,
-                    a1, a2, a3, a4,
-                    correct_idx + 1,   # store 1-based
-                ),
-            )
-            db.commit()
-        except Exception as e:
+            db.session.add(FlashcardQuestion(
+                user_id=session["user_id"],
+                quiz_name=quiz_name,
+                question=question,
+                choice1=a1,
+                choice2=a2,
+                choice3=a3,
+                choice4=a4,
+                correct_choice=correct_idx + 1,  # store 1-based
+            ))
+            db.session.commit()
+        except SQLAlchemyError as e:
+            db.session.rollback()
             logger.exception("Flashcard insert error: %s", e)
             return redirect(url_for("flashcards.history_create_choices"))
 

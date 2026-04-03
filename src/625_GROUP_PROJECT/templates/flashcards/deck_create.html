@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>New Deck</title>
+  <style>
+    body{margin:0;min-height:100vh;background:#000;color:#fff;font-family:Arial,sans-serif;
+         display:flex;align-items:center;justify-content:center;}
+    .container{width:min(500px,92vw);}
+    h1{font-size:36px;margin-bottom:24px;}
+    label{display:block;font-size:16px;margin-bottom:4px;}
+    input[type=text]{
+      width:100%;box-sizing:border-box;padding:10px;font-size:16px;
+      background:#111;color:#fff;border:1px solid #444;border-radius:4px;margin-bottom:20px;}
+    button{padding:10px 24px;font-size:16px;background:#8ab4ff;color:#000;
+           border:none;border-radius:4px;cursor:pointer;}
+    .back{margin-top:24px;}
+    .back a{color:#8ab4ff;text-decoration:underline;font-size:16px;}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>New Deck</h1>
+    <form method="post">
+      <label>Title</label>
+      <input type="text" name="title" required autofocus>
+      <button type="submit">Create Deck</button>
+    </form>
+    <div class="back">
+      <a href="{{ url_for('flashcards.deck_list') }}">← Back to My Decks</a>
+    </div>
+  </div>
+</body>
+</html>
