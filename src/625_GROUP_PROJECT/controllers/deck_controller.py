@@ -28,15 +28,15 @@ def create():
             return redirect(url_for('deck.view_deck', deck_id=deck_id))
     return render_template('deck_form.html', deck=None, colors=DECK_COLORS, action='Create')
 
-# @deck_bp.route('/deck/<int:deck_id>')
-# @login_required
-# def view_deck(deck_id):
-#     deck = get_deck_by_id(deck_id, session['user_id'])
-#     if not deck:
-#         flash('Deck not found.', 'error')
-#         return redirect(url_for('deck.dashboard'))
-#     cards = get_cards_by_deck(deck_id)
-#     return render_template('deck_view.html', deck=deck, cards=cards)
+@deck_bp.route('/deck/<int:deck_id>')
+@login_required
+def view_deck(deck_id):
+    deck = get_deck_by_id(deck_id, session['user_id'])
+    if not deck:
+         flash('Deck not found.', 'error')
+         return redirect(url_for('deck.dashboard'))
+    cards = get_cards_by_deck(deck_id)
+    return render_template('deck_view.html', deck=deck, cards=cards)
 
 @deck_bp.route('/deck/<int:deck_id>/edit', methods=['GET', 'POST'])
 @login_required
