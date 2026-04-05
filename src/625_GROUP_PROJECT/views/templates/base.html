@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Agile Addicts{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
+</head>
+<body>
+  {% if session.get('user_id') %}
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="{{ url_for('deck.dashboard') }}" class="navbar-brand">
+        <span class="dot"></span>
+        Memora
+      </a>
+      <ul class="navbar-nav">
+        <li><span class="nav-username">👤 {{ session.get('username') }}</span></li>
+        <li><a href="{{ url_for('deck.dashboard') }}">Decks</a></li>
+        <li><a href="{{ url_for('deck.create') }}">+ New Deck</a></li>
+        <li><a href="{{ url_for('stats.overview') }}">📊 Stats</a></li>
+        <li><a href="{{ url_for('auth.logout') }}">Sign out</a></li>
+      </ul>
+    </div>
+  </nav>
+  {% endif %}
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container">
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">
+            {% if category == 'success' %}✓{% else %}⚠{% endif %}
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
