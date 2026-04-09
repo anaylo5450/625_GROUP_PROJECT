@@ -30,6 +30,8 @@ def init_db():
             user_id INTEGER NOT NULL,
             title TEXT NOT NULL,
             description TEXT,
+            tags TEXT,
+            visibility TEXT NOT NULL DEFAULT 'private',
             color TEXT DEFAULT '#6366f1',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -46,6 +48,18 @@ def init_db():
             FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE
         );
     ''')
+    conn.commit()
+    conn.close()
+
+
+def migrate_decks():
+    """Add tags and visibility columns to decks if they don't exist yet."""
+    conn = get_db()
+    existing = [row[1] for row in conn.execute('PRAGMA table_info(decks)').fetchall()]
+    if 'tags' not in existing:
+        conn.execute('ALTER TABLE decks ADD COLUMN tags TEXT')
+    if 'visibility' not in existing:
+        conn.execute("ALTER TABLE decks ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private'")
     conn.commit()
     conn.close()
 

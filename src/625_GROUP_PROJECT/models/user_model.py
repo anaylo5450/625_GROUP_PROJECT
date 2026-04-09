@@ -1,15 +1,12 @@
 from models.database import get_db
-import hashlib
+from werkzeug.security import generate_password_hash, check_password_hash
 
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
-
-def create_user(username, email, password):
+def create_user(username, email, password, firstname, lastname):
     conn = get_db()
     try:
         conn.execute(
-            'INSERT INTO users (username, email, password) VALUES (?, ?, ?)',
-            (username, email, hash_password(password))
+            'INSERT INTO users (username, email, password, firstname, lastname) VALUES (?, ?, ?, ?, ?)',
+            (username, email, generate_password_hash(password), firstname, lastname)
         )
         conn.commit()
         return True, None
@@ -25,11 +22,12 @@ def create_user(username, email, password):
 def get_user_by_credentials(username, password):
     conn = get_db()
     user = conn.execute(
-        'SELECT * FROM users WHERE username = ? AND password = ?',
-        (username, hash_password(password))
+        'SELECT * FROM users WHERE username = ?', (username,)
     ).fetchone()
     conn.close()
-    return user
+    if user and check_password_hash(user['password'], password):
+        return user
+    return None
 
 def get_user_by_id(user_id):
     conn = get_db()

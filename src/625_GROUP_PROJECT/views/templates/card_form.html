@@ -72,11 +72,22 @@
 
   let isFlipped = false;
 
+  function applyFlip() {
+    cardInner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+    // Belt-and-suspenders: explicitly hide the non-visible face so
+    // backface-visibility failures don't bleed through on some browsers.
+    previewFront.style.visibility = isFlipped ? 'hidden' : 'visible';
+    previewBack.style.visibility  = isFlipped ? 'visible' : 'hidden';
+  }
+
   // Click the card wrapper to flip — never auto-flip
   previewCard.addEventListener('click', () => {
     isFlipped = !isFlipped;
-    cardInner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+    applyFlip();
   });
+
+  // initialise visibility on load
+  applyFlip();
 
   function updatePreview() {
     const frontVal = frontInput.value.trim();

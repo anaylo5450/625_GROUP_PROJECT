@@ -21,22 +21,22 @@ def get_deck_by_id(deck_id, user_id):
     conn.close()
     return deck
 
-def create_deck(user_id, title, description, color):
+def create_deck(user_id, title, description, color, tags=None, visibility='private'):
     conn = get_db()
     cursor = conn.execute(
-        'INSERT INTO decks (user_id, title, description, color) VALUES (?, ?, ?, ?)',
-        (user_id, title, description, color)
+        'INSERT INTO decks (user_id, title, description, color, tags, visibility) VALUES (?, ?, ?, ?, ?, ?)',
+        (user_id, title, description, color, tags, visibility)
     )
     deck_id = cursor.lastrowid
     conn.commit()
     conn.close()
     return deck_id
 
-def update_deck(deck_id, user_id, title, description, color):
+def update_deck(deck_id, user_id, title, description, color, tags=None, visibility='private'):
     conn = get_db()
     conn.execute(
-        'UPDATE decks SET title=?, description=?, color=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?',
-        (title, description, color, deck_id, user_id)
+        'UPDATE decks SET title=?, description=?, color=?, tags=?, visibility=?, updated_at=CURRENT_TIMESTAMP WHERE id=? AND user_id=?',
+        (title, description, color, tags, visibility, deck_id, user_id)
     )
     conn.commit()
     conn.close()

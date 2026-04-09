@@ -5,8 +5,7 @@ from models.flashcard_model import get_cards_by_deck
 
 deck_bp = Blueprint('deck', __name__)
 
-#DECK_COLORS = ['#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4444','#14b8a6']
-DECK_COLORS = '#3b82f6'
+DECK_COLORS = ['#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4444','#14b8a6']
 
 @deck_bp.route('/dashboard')
 @login_required
@@ -22,10 +21,12 @@ def create():
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         color = request.form.get('color', '#6366f1')
+        tags = request.form.get('tags', '').strip() or None
+        visibility = request.form.get('visibility', 'private')
         if not title:
             flash('Deck title is required.', 'error')
         else:
-            deck_id = create_deck(session['user_id'], title, description, color)
+            deck_id = create_deck(session['user_id'], title, description, color, tags, visibility)
             flash('Deck created successfully!', 'success')
             return redirect(url_for('deck.view_deck', deck_id=deck_id))
     return render_template('deck_form.html', deck=None, colors=DECK_COLORS, action='Create')
@@ -51,10 +52,12 @@ def edit(deck_id):
         title = request.form.get('title', '').strip()
         description = request.form.get('description', '').strip()
         color = request.form.get('color', deck['color'])
+        tags = request.form.get('tags', '').strip() or None
+        visibility = request.form.get('visibility', 'private')
         if not title:
             flash('Deck title is required.', 'error')
         else:
-            update_deck(deck_id, session['user_id'], title, description, color)
+            update_deck(deck_id, session['user_id'], title, description, color, tags, visibility)
             flash('Deck updated!', 'success')
             return redirect(url_for('deck.view_deck', deck_id=deck_id))
     return render_template('deck_form.html', deck=deck, colors=DECK_COLORS, action='Edit')

@@ -1,5 +1,5 @@
 from flask import Flask
-from models.database import init_db, migrate_stats
+from models.database import init_db, migrate_decks, migrate_stats
 from controllers.auth_controller import auth_bp
 from controllers.deck_controller import deck_bp
 from controllers.flashcard_controller import flashcard_bp
@@ -15,6 +15,7 @@ app.register_blueprint(stats_bp)
 
 # Always initialize DB on startup
 init_db()
+migrate_decks()
 migrate_stats()
 
 if __name__ == '__main__':

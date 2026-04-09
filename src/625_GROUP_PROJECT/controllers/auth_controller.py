@@ -23,18 +23,20 @@ def register():
     if 'user_id' in session:
         return redirect(url_for('deck.dashboard'))
     if request.method == 'POST':
+        firstname = request.form.get('firstname', '').strip()
+        lastname = request.form.get('lastname', '').strip()
         username = request.form.get('username', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         confirm = request.form.get('confirm_password', '')
-        if not username or not email or not password:
+        if not firstname or not lastname or not username or not email or not password:
             flash('All fields are required.', 'error')
         elif password != confirm:
             flash('Passwords do not match.', 'error')
         elif len(password) < 6:
             flash('Password must be at least 6 characters.', 'error')
         else:
-            success, error = create_user(username, email, password)
+            success, error = create_user(username, email, password, firstname, lastname)
             if success:
                 flash('Account created! Please log in.', 'success')
                 return redirect(url_for('auth.login'))

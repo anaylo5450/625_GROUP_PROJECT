@@ -22,6 +22,21 @@
       </div>
 
       <div class="form-group">
+        <label class="form-label">Tags <span style="color:var(--text-dim)">(optional, comma-separated)</span></label>
+        <input class="form-control" type="text" name="tags"
+               value="{{ deck['tags'] if deck and deck['tags'] else '' }}"
+               placeholder="e.g. math, algebra, chapter-1">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Visibility</label>
+        <select class="form-control" name="visibility">
+          <option value="private" {{ 'selected' if not deck or deck['visibility'] == 'private' }}>Private</option>
+          <option value="public" {{ 'selected' if deck and deck['visibility'] == 'public' }}>Public</option>
+        </select>
+      </div>
+
+      <div class="form-group">
         <!-- <label class="form-label">Accent Color</label> -->
         <div class="color-picker">
           {% set selected_color = deck['color'] if deck else '#6366f1' %}
