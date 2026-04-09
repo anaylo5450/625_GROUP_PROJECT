@@ -5,17 +5,17 @@
   <div class="page-header">
     <div>
       <h1>My <span class="serif-italic">Decks</span></h1>
-      <!-- <p>{{ decks|length }} deck{{ 's' if decks|length != 1 }} in your library</p> -->
+      <p>{{ decks|length }} deck{{ 's' if decks|length != 1 }} in your library</p>
     </div>
     <a href="{{ url_for('deck.create') }}" class="btn btn-primary">+ New Deck</a>
   </div>
 
-  <!-- <div class="stats-row">
+  <div class="stats-row">
     <div class="stat-chip"><strong>{{ decks|length }}</strong> Decks</div>
     <div class="stat-chip"><strong>{{ decks|sum(attribute='card_count') }}</strong> Total Cards</div>
-  </div> -->
+  </div>
 
-  <!-- <div class="decks-grid">
+  <div class="decks-grid">
     {% if decks %}
       {% for deck in decks %}
       <a href="{{ url_for('deck.view_deck', deck_id=deck['id']) }}" class="deck-card" style="animation-delay: {{ loop.index0 * 0.05 }}s">
@@ -40,6 +40,6 @@
         <a href="{{ url_for('deck.create') }}" class="btn btn-primary">Create a Deck</a>
       </div>
     {% endif %}
-  </div> -->
+  </div>
 </div>
 {% endblock %}

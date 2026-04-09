@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }} Card — {{ deck['title'] }}{% endblock %}
+{% block content %}
+<div class="container-md form-page">
+  <div class="form-card">
+    <h1 class="form-title">{{ action }} <span class="serif-italic">Card</span></h1>
+    <p class="form-subtitle">
+      In deck: <a href="{{ url_for('deck.view_deck', deck_id=deck['id']) }}">{{ deck['title'] }}</a>
+    </p>
+
+    <!-- Live flip preview -->
+    <div class="card-preview-flip" id="previewCard" title="Click to flip preview">
+      <div class="card-inner" id="cardInner">
+        <div class="card-face card-front-face" id="previewFront">
+          <span style="color:var(--text-dim); font-style:italic">Front side preview…</span>
+        </div>
+        <div class="card-face card-back-face" id="previewBack">
+          <span style="opacity:0.6; font-style:italic">Back side preview…</span>
+        </div>
+      </div>
+    </div>
+    <p class="flip-hint">👆 Click card to preview flip</p>
+
+    <form method="POST" id="cardForm">
+      <div class="card-editor">
+        <div>
+          <div class="card-side-label">✦ Front (Question)</div>
+          <textarea class="form-control" name="front" id="frontInput"
+                    placeholder="Type the question or term…"
+                    style="min-height: 120px;" required>{{ card['front'] if card else '' }}</textarea>
+        </div>
+        <div>
+          <div class="card-side-label">✦ Back (Answer)</div>
+          <textarea class="form-control" name="back" id="backInput"
+                    placeholder="Type the answer or definition…"
+                    style="min-height: 120px;" required>{{ card['back'] if card else '' }}</textarea>
+        </div>
+      </div>
+
+      <div class="form-footer">
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <a href="{{ url_for('deck.view_deck', deck_id=deck['id']) }}" class="btn btn-ghost">Cancel</a>
+          {% if action == 'Create' %}
+          <button type="submit" name="add_another" value="1" class="btn btn-secondary">Save & Add Another</button>
+          {% endif %}
+        </div>
+        <button type="submit" class="btn btn-primary">
+          {% if action == 'Create' %}Add Card →{% else %}Save Changes{% endif %}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  {% if card %}
+  <div style="margin-top:16px; text-align:center;">
+    <form method="POST" action="{{ url_for('flashcard.delete', deck_id=deck['id'], card_id=card['id']) }}"
+          class="delete-form" onsubmit="return confirm('Delete this card?')">
+      <button type="submit" class="btn btn-danger btn-sm">🗑 Delete this card</button>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const frontInput = document.getElementById('frontInput');
+  const backInput  = document.getElementById('backInput');
+  const previewFront = document.getElementById('previewFront');
+  const previewBack  = document.getElementById('previewBack');
+  const previewCard  = document.getElementById('previewCard');
+  const cardInner    = document.getElementById('cardInner');
+
+  let isFlipped = false;
+
+  // Click the card wrapper to flip — never auto-flip
+  previewCard.addEventListener('click', () => {
+    isFlipped = !isFlipped;
+    cardInner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
+  });
+
+  function updatePreview() {
+    const frontVal = frontInput.value.trim();
+    const backVal  = backInput.value.trim();
+    previewFront.innerHTML = frontVal
+      ? `<span>${frontVal}</span>`
+      : `<span style="color:var(--text-dim);font-style:italic">Front side preview…</span>`;
+    previewBack.innerHTML = backVal
+      ? `<span>${backVal}</span>`
+      : `<span style="opacity:0.6;font-style:italic">Back side preview…</span>`;
+  }
+
+  frontInput.addEventListener('input', updatePreview);
+  backInput.addEventListener('input', updatePreview);
+
+  // Populate preview on edit (card already has content)
+  updatePreview();
+</script>
+{% endblock %}

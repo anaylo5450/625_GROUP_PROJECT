@@ -1,0 +1,267 @@
+{% extends 'base.html' %}
+{% block title %}Study: {{ deck['title'] }} — Agile Addicts{% endblock %}
+{% block content %}
+<div class="study-page">
+
+  <!-- Progress -->
+  <div class="study-progress">
+    <div class="progress-text">
+      <span id="progressLabel">Card 1 of {{ cards|length }}</span>
+      <span id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <!-- Card -->
+  <div class="study-card-wrap" id="studyCard" onclick="flipCard()">
+    <div class="study-card-inner">
+      <div class="study-card-face study-front">
+        <div class="face-label">Question</div>
+        <div class="face-text" id="cardFront"></div>
+      </div>
+      <div class="study-card-face study-back">
+        <div class="face-label">Answer</div>
+        <div class="face-text" id="cardBack"></div>
+      </div>
+    </div>
+  </div>
+
+  <p class="study-hint" id="studyHint">
+    <span>🖱</span> Click card or press
+    <kbd style="background:var(--surface-2);border:1px solid var(--border);padding:2px 6px;border-radius:4px;font-size:0.8em">Space</kbd>
+    to flip
+  </p>
+
+  <!-- Rate buttons — shown after flip -->
+  <div class="rate-buttons" id="rateButtons" style="display:none;">
+    <p class="rate-label">Did you get it?</p>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button class="btn btn-rate btn-wrong" onclick="rateCard(false)">✗ Missed it</button>
+      <button class="btn btn-rate btn-correct" onclick="rateCard(true)">✓ Got it</button>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <div class="study-nav" id="studyNav">
+    <button class="btn btn-secondary" onclick="prevCard()">← Prev</button>
+    <div class="study-counter" id="studyCounter">1 / {{ cards|length }}</div>
+    <button class="btn btn-primary" id="nextBtn" onclick="nextCard()">Next →</button>
+  </div>
+
+  <!-- Completion screen (hidden) -->
+  <div class="study-complete" id="studyComplete" style="display:none">
+    <div class="icon">🎉</div>
+    <h2>Deck <span class="serif-italic">Complete!</span></h2>
+    <div class="completion-stats" id="completionStats"></div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:24px;">
+      <button class="btn btn-primary" onclick="restartStudy()">↺ Study Again</button>
+      <a href="{{ url_for('stats.deck_stats', deck_id=deck['id']) }}" class="btn btn-secondary">📊 View Stats</a>
+      <a href="{{ url_for('deck.view_deck', deck_id=deck['id']) }}" class="btn btn-ghost">← Back to Deck</a>
+    </div>
+  </div>
+
+  <!-- Back link -->
+  <div style="margin-top:32px;" id="exitLink">
+    <a href="{{ url_for('deck.view_deck', deck_id=deck['id']) }}" class="btn btn-ghost btn-sm">← Exit Study Mode</a>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  const cards    = {{ cards | tojson }};
+  const deckId   = {{ deck['id'] }};
+  const totalCards = cards.length;
+
+  let current       = 0;
+  let flipped       = false;
+  let sessionId     = null;
+  let startTime     = Date.now();
+  let cardsCorrect  = 0;
+  let cardsWrong    = 0;
+  let ratedCards    = new Set(); // track which indices have been rated
+
+  // DOM refs
+  const cardEl       = document.getElementById('studyCard');
+  const frontEl      = document.getElementById('cardFront');
+  const backEl       = document.getElementById('cardBack');
+  const counterEl    = document.getElementById('studyCounter');
+  const progressLabel= document.getElementById('progressLabel');
+  const progressPct  = document.getElementById('progressPct');
+  const progressBar  = document.getElementById('progressBar');
+  const studyNav     = document.getElementById('studyNav');
+  const studyComplete= document.getElementById('studyComplete');
+  const rateButtons  = document.getElementById('rateButtons');
+  const studyHint    = document.getElementById('studyHint');
+  const nextBtn      = document.getElementById('nextBtn');
+
+  // Start session via API
+  fetch('/api/session/start', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({deck_id: deckId, cards_total: totalCards})
+  }).then(r => r.json()).then(d => { sessionId = d.session_id; });
+
+  function showCard(index) {
+    const card = cards[index];
+    frontEl.textContent = card.front;
+    backEl.textContent  = card.back;
+    counterEl.textContent = `${index + 1} / ${totalCards}`;
+    progressLabel.textContent = `Card ${index + 1} of ${totalCards}`;
+    const pct = Math.round((index / totalCards) * 100);
+    progressPct.textContent = pct + '%';
+    progressBar.style.width = pct + '%';
+
+    // Reset flip state
+    cardEl.classList.remove('flipped');
+    flipped = false;
+
+    // Hide rate buttons until this card is flipped
+    rateButtons.style.display = 'none';
+    studyHint.style.display   = '';
+    nextBtn.disabled = false;
+  }
+
+  function flipCard() {
+    flipped = !flipped;
+    cardEl.classList.toggle('flipped', flipped);
+    if (flipped) {
+      // Show rating buttons after seeing the answer
+      rateButtons.style.display = 'block';
+      studyHint.style.display   = 'none';
+    } else {
+      rateButtons.style.display = 'none';
+      studyHint.style.display   = '';
+    }
+  }
+
+  function rateCard(correct) {
+    if (ratedCards.has(current)) return; // don't double-count
+    ratedCards.add(current);
+    if (correct) cardsCorrect++; else cardsWrong++;
+
+    // Visual feedback
+    const btn = correct
+      ? document.querySelector('.btn-correct')
+      : document.querySelector('.btn-wrong');
+    btn.style.opacity = '0.5';
+    setTimeout(() => { btn.style.opacity = ''; nextCard(); }, 300);
+  }
+
+  function nextCard() {
+    if (current < totalCards - 1) {
+      current++;
+      showCard(current);
+    } else {
+      finishSession(true);
+    }
+  }
+
+  function prevCard() {
+    if (current > 0) {
+      current--;
+      showCard(current);
+    }
+  }
+
+  function finishSession(completed) {
+    const duration = Math.round((Date.now() - startTime) / 1000);
+    const cardsSeen = current + 1;
+
+    if (sessionId) {
+      fetch('/api/session/finish', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          session_id:       sessionId,
+          cards_seen:       cardsSeen,
+          cards_correct:    cardsCorrect,
+          cards_wrong:      cardsWrong,
+          duration_seconds: duration,
+          completed:        completed
+        })
+      });
+    }
+
+    showComplete(cardsSeen, duration, completed);
+  }
+
+  function showComplete(cardsSeen, duration, completed) {
+    cardEl.style.display      = 'none';
+    studyNav.style.display    = 'none';
+    studyHint.style.display   = 'none';
+    rateButtons.style.display = 'none';
+    document.getElementById('exitLink').style.display = 'none';
+    studyComplete.style.display = 'block';
+    progressBar.style.width     = '100%';
+    progressPct.textContent     = '100%';
+    progressLabel.textContent   = 'Complete!';
+
+    const accuracy = cardsSeen > 0
+      ? Math.round((cardsCorrect / cardsSeen) * 100)
+      : 0;
+    const mins  = Math.floor(duration / 60);
+    const secs  = duration % 60;
+    const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+
+    document.getElementById('completionStats').innerHTML = `
+      <div class="completion-grid">
+        <div class="completion-stat">
+          <div class="cs-value">${cardsSeen}</div>
+          <div class="cs-label">Cards Seen</div>
+        </div>
+        <div class="completion-stat">
+          <div class="cs-value correct-val">${cardsCorrect}</div>
+          <div class="cs-label">Got Right</div>
+        </div>
+        <div class="completion-stat">
+          <div class="cs-value wrong-val">${cardsWrong}</div>
+          <div class="cs-label">Missed</div>
+        </div>
+        <div class="completion-stat">
+          <div class="cs-value accent-val">${accuracy}%</div>
+          <div class="cs-label">Accuracy</div>
+        </div>
+        <div class="completion-stat">
+          <div class="cs-value">${timeStr}</div>
+          <div class="cs-label">Time Spent</div>
+        </div>
+      </div>`;
+  }
+
+  function restartStudy() {
+    current = 0; flipped = false;
+    cardsCorrect = 0; cardsWrong = 0;
+    ratedCards.clear();
+    startTime = Date.now();
+
+    cardEl.style.display      = '';
+    studyNav.style.display    = '';
+    rateButtons.style.display = 'none';
+    studyHint.style.display   = '';
+    document.getElementById('exitLink').style.display = '';
+    studyComplete.style.display = 'none';
+
+    // New session
+    fetch('/api/session/start', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({deck_id: deckId, cards_total: totalCards})
+    }).then(r => r.json()).then(d => { sessionId = d.session_id; });
+
+    showCard(0);
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space')                             { e.preventDefault(); flipCard(); }
+    if (e.code === 'ArrowRight' || e.code === 'ArrowDown')  nextCard();
+    if (e.code === 'ArrowLeft'  || e.code === 'ArrowUp')    prevCard();
+    if (e.code === 'KeyG') rateCard(true);
+    if (e.code === 'KeyM') rateCard(false);
+  });
+
+  showCard(0);
+</script>
+{% endblock %}
