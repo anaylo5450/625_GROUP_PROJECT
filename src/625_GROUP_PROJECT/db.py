@@ -50,7 +50,10 @@ class Deck(db.Model):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.user_id"), nullable=False
     )
-    title: Mapped[str] = mapped_column(String, nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)                              #US-3.1 - Andrew
+    description: Mapped[str | None] = mapped_column(String, nullable=True)                  #US-3.2 - Andrew
+    tags: Mapped[str | None] = mapped_column(String, nullable=True)                         #US-3.3 - Andrew
+    visibility: Mapped[str] = mapped_column(String, nullable=False, default="private")      #US-3.4 - Andrew
 
 
 class FlashcardQuestion(db.Model):
