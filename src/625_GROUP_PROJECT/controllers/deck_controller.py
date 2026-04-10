@@ -22,7 +22,7 @@ def create():
         description = request.form.get('description', '').strip()
         color = request.form.get('color', '#6366f1')
         tags = request.form.get('tags', '').strip() or None
-        visibility = request.form.get('visibility', 'private')
+        visibility = request.form.get('visibility', '0')
         if not title:
             flash('Deck title is required.', 'error')
         else:

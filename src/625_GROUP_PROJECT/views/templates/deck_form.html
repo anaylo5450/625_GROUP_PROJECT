@@ -31,8 +31,8 @@
       <div class="form-group">
         <label class="form-label">Visibility</label>
         <select class="form-control" name="visibility">
-          <option value="private" {{ 'selected' if not deck or deck['visibility'] == 'private' }}>Private</option>
-          <option value="public" {{ 'selected' if deck and deck['visibility'] == 'public' }}>Public</option>
+          <option value="0" {{ 'selected' if not deck or deck['visibility'] == '0' }}>Private</option>
+          <option value="1" {{ 'selected' if deck and deck['visibility'] == '1' }}>Public</option>
         </select>
       </div>
 

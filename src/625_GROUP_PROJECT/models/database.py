@@ -31,7 +31,7 @@ def init_db():
             title TEXT NOT NULL,
             description TEXT,
             tags TEXT,
-            visibility TEXT NOT NULL DEFAULT 'private',
+            visibility BOOLEAN DEFAULT 0,
             color TEXT DEFAULT '#6366f1',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
