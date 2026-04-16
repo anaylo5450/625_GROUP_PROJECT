@@ -9,9 +9,14 @@ Description:
 """
 # Imports
 import logging
-from flask import render_template, request, redirect, url_for, session
+
+import os
+
+from flask import render_template, request, redirect, url_for, session, current_app
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import generate_password_hash, check_password_hash
+
+from werkzeug.utils import secure_filename
 
 from . import bp
 from ..db import db, User, Deck, FlashcardQuestion
@@ -22,6 +27,16 @@ logger = logging.getLogger(__name__)
 # session keys for the multi-step question creation flow
 HIST_PENDING_Q         = "hist_pending_q"
 HIST_PENDING_QUIZ_NAME = "hist_pending_quiz_name"
+
+ALLOWED_IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
+
+def _allowed_image(filename):
+    """
+    Input: filename (str)
+    Output: bool
+    Details: Returns True if the uploaded file has an allowed image extension.
+    """
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
 
 # hardcoded sample quiz questions (no DB required)
 SAMPLE_HISTORY = [
@@ -443,19 +458,18 @@ def history_create_question():
 @bp.route("/history/create/choices", methods=["GET", "POST"])
 def history_create_choices():
     """
-    Input:  POST form fields: a1, a2, a3, a4, correct (0-3)
+    Input: POST form fields: a1, a2, a3, a4, correct (0-3), optional image file
     Output: Redirect to after_save on success, redirect to self on failure
-    Details:
-        Step 2 of 2 in the question creation flow. Reads question data from
-        the session, validates the four answer choices and the correct index,
-        then inserts the complete question into the database.
-        correct_choice is stored 1-based (correct_idx + 1).
+    Details: Step 2 of 2 in the question creation flow.
+    Reads question data from the session, validates the four answer choices and
+    the correct index, optionally saves an uploaded image, then inserts the
+    complete question into the database. correct_choice is stored 1-based.
     """
     if not _require_login():
         return redirect(url_for("flashcards.login"))
 
     # retrieve data stored by step 1
-    question  = session.get(HIST_PENDING_Q)
+    question = session.get(HIST_PENDING_Q)
     quiz_name = session.get(HIST_PENDING_QUIZ_NAME)
 
     # redirect back to step 1 if session data is missing
@@ -484,11 +498,24 @@ def history_create_choices():
         if correct_idx not in (0, 1, 2, 3):
             return redirect(url_for("flashcards.history_create_choices"))
 
+        image = request.files.get("image")
+        image_filename = None
+
+        if image and image.filename:
+            if not _allowed_image(image.filename):
+                return redirect(url_for("flashcards.history_create_choices"))
+
+            safe_name = secure_filename(image.filename)
+            image_filename = f"{session['user_id']}_{safe_name}"
+            image_path = os.path.join(current_app.config["UPLOAD_FOLDER"], image_filename)
+            image.save(image_path)
+
         try:
             db.session.add(FlashcardQuestion(
                 user_id=session["user_id"],
                 quiz_name=quiz_name,
                 question=question,
+                image_filename=image_filename,
                 choice1=a1,
                 choice2=a2,
                 choice3=a3,
@@ -504,6 +531,7 @@ def history_create_choices():
         # clear session data now that the question is saved
         session.pop(HIST_PENDING_Q, None)
         session.pop(HIST_PENDING_QUIZ_NAME, None)
+
         return redirect(url_for("flashcards.history_after_save"))
 
     return render_template(
