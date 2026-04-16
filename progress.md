@@ -111,3 +111,27 @@ status: partial
 
 ## Next
 - #42: Generate shareable link for a public deck (public route, no login_required)
+
+---
+session: 2026-04-16T00:05:00
+status: complete
+---
+## Done
+- #42: get_public_deck() model function handling int/string visibility storage
+- public_view route at /deck/<id>/public — no login_required; returns 404-equivalent for private decks
+- deck_view.html: Public Link section with readonly URL input and clipboard copy button (owner + public only)
+- deck_view_public.html: standalone template with sign-in nav link, card list, show/hide answers
+- Empty share form submission on public deck now flashes the public URL instead of an error
+- Fixed visibility int/string mismatch (DB stores int 1, code was comparing to string '1')
+- Committed as 84fc58b on sprint-2; #42 closed and moved to Done on board
+
+## Decisions
+- Visibility stored as integer in SQLite despite form sending '0'/'1' strings — used str() cast and IN ('1',1) to handle both
+- Public view is a separate template (not extending base.html) so it has no authenticated nav links
+
+## Blockers
+- none
+
+## Next
+- All eyeclept Sprint 2 issues complete: #60, #49, #48, #42
+- Push sprint-2 branch to remote when ready

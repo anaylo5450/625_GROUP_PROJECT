@@ -16,6 +16,7 @@ A full-featured flashcard web application built with **Python (Flask)**, **SQLit
 - **Study Mode** — fullscreen study session with progress bar and correct/incorrect tracking
 - **Answer Privacy** — answers hidden by default on deck view; toggle to reveal before studying
 - **Deck Sharing** — share decks with other users by username; shared decks appear in their dashboard and are fully studyable
+- **Public Decks** — set a deck to public to get a shareable link anyone can view without logging in
 - **Session Stats** — study session results stored automatically; stats overview and per-deck history
 - **Dark theme UI** — polished design with Instrument Serif + DM Sans typography
 
