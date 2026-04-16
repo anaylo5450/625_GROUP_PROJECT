@@ -29,14 +29,19 @@
   </div>
 
   <div class="cards-section">
-    <div class="section-title">{{ cards|length }} Card{{ 's' if cards|length != 1 }}</div>
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>{{ cards|length }} Card{{ 's' if cards|length != 1 }}</span>
+      {% if cards %}
+      <button id="toggleAnswers" class="btn btn-ghost btn-sm" onclick="toggleAnswers()" style="font-size:0.8rem;">Show Answers</button>
+      {% endif %}
+    </div>
 
     {% if cards %}
     <div class="cards-list">
       {% for card in cards %}
       <div class="card-row" style="animation-delay: {{ loop.index0 * 0.04 }}s">
         <div class="card-row-front">{{ card['front'] }}</div>
-        <div class="card-row-back">{{ card['back'] }}</div>
+        <div class="card-row-back answers-hidden" style="visibility:hidden;user-select:none;">{{ card['back'] }}</div>
         <div class="card-row-actions">
           <a href="{{ url_for('flashcard.edit', deck_id=deck['id'], card_id=card['id']) }}"
              class="btn btn-ghost btn-sm">Edit</a>
@@ -58,4 +63,17 @@
     {% endif %}
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+  let answersVisible = false;
+  function toggleAnswers() {
+    answersVisible = !answersVisible;
+    document.querySelectorAll('.card-row-back').forEach(el => {
+      el.style.visibility = answersVisible ? 'visible' : 'hidden';
+      el.style.userSelect = answersVisible ? '' : 'none';
+    });
+    document.getElementById('toggleAnswers').textContent = answersVisible ? 'Hide Answers' : 'Show Answers';
+  }
+</script>
 {% endblock %}
