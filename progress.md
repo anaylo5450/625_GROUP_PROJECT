@@ -88,3 +88,26 @@ status: partial
 ## Next
 - #48: Share deck directly with another user by username (requires new deck_shares table)
 - #42: Generate shareable link for a public deck (requires public route without login_required)
+
+---
+session: 2026-04-16T00:04:00
+status: partial
+---
+## Done
+- #48: deck_shares table + migration; share/unshare model functions; get_deck_by_id_for_user
+- share route: looks up username, validates, inserts share record with error handling
+- unshare route: owner can remove individual shares from deck view
+- study route: switched to get_deck_by_id_for_user so shared users can study
+- deck_view.html: share form + current shares list (owner only)
+- dashboard.html: Shared with me section (only shown when shares exist)
+- Committed as 1dde29f on sprint-2
+
+## Decisions
+- study route used get_deck_by_id (owner-only) — caught during live testing; fixed before commit
+- edit/delete routes left on get_deck_by_id (owner-only) — correct, non-owners cannot edit
+
+## Blockers
+- none
+
+## Next
+- #42: Generate shareable link for a public deck (public route, no login_required)
