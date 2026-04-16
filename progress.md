@@ -44,3 +44,26 @@ status: partial
 - #49: Restrict edit and delete to deck owner
 - #48: Share deck directly with another user by username
 - #42: Generate shareable link for a public deck
+
+---
+session: 2026-04-16T00:02:00
+status: partial
+---
+## Done
+- #60: Answers hidden by default on deck_view.html card list using visibility:hidden
+- Show/Hide Answers toggle button added to section header
+- GithubRef.md updated with sprint-2 branch, session rules (assignees, board, scope, issue interpretation)
+- Committed as a8d1f61 on sprint-2
+
+## Decisions
+- Used visibility:hidden (not display:none) to preserve column layout while hiding text
+- user-select:none on hidden answers prevents text selection revealing content
+- Toggle is per-page (resets on navigate) — no persistence needed for this scope
+
+## Blockers
+- none
+
+## Next
+- #49: Restrict edit and delete to deck owner
+- #48: Share deck directly with another user by username
+- #42: Generate shareable link for a public deck

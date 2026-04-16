@@ -14,6 +14,7 @@ A full-featured flashcard web application built with **Python (Flask)**, **SQLit
 - **Flashcard CRUD** — add, edit, delete cards with live flip preview while editing
 - **Flip Animation** — smooth 3D card flip in both edit preview and study mode
 - **Study Mode** — fullscreen study session with progress bar and correct/incorrect tracking
+- **Answer Privacy** — answers hidden by default on deck view; toggle to reveal before studying
 - **Session Stats** — study session results stored automatically; stats overview and per-deck history
 - **Dark theme UI** — polished design with Instrument Serif + DM Sans typography
 
