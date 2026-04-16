@@ -41,5 +41,35 @@
       </div>
     {% endif %}
   </div>
+
+  {% if shared %}
+  <div style="margin-top: 48px;">
+    <div class="page-header" style="margin-bottom: 16px;">
+      <div>
+        <h2>Shared <span class="serif-italic">with me</span></h2>
+        <p>{{ shared|length }} deck{{ 's' if shared|length != 1 }} shared by others</p>
+      </div>
+    </div>
+    <div class="decks-grid">
+      {% for deck in shared %}
+      <a href="{{ url_for('deck.view_deck', deck_id=deck['id']) }}" class="deck-card"
+         style="animation-delay: {{ loop.index0 * 0.05 }}s">
+        <div class="deck-card-header" style="background: {{ deck['color'] }}20;">
+          <div class="deck-card-icon" style="color: {{ deck['color'] }}">🃏</div>
+        </div>
+        <div class="deck-card-body">
+          <div class="deck-card-title">{{ deck['title'] }}</div>
+          <div class="deck-card-desc">{{ deck['description'] or 'No description' }}</div>
+          <div class="deck-card-meta">
+            <span class="card-count-badge">{{ deck['card_count'] }} card{{ 's' if deck['card_count'] != 1 }}</span>
+            <span>Study →</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}

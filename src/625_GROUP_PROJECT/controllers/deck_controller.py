@@ -1,7 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from controllers.auth_controller import login_required
-from models.deck_model import get_decks_by_user, get_deck_by_id, create_deck, update_deck, delete_deck
+from models.deck_model import (get_decks_by_user, get_deck_by_id, get_deck_by_id_for_user,
+                               create_deck, update_deck, delete_deck,
+                               share_deck, unshare_deck, get_shares_for_deck, get_shared_decks)
 from models.flashcard_model import get_cards_by_deck
+from models.user_model import get_user_by_username
 
 deck_bp = Blueprint('deck', __name__)
 
@@ -11,8 +14,8 @@ DECK_COLORS = ['#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4
 @login_required
 def dashboard():
     decks = get_decks_by_user(session['user_id'])
-    #return render_template('dashboard.html', decks=decks, colors=DECK_COLORS)
-    return render_template('dashboard.html', decks=decks)
+    shared = get_shared_decks(session['user_id'])
+    return render_template('dashboard.html', decks=decks, shared=shared)
 
 @deck_bp.route('/deck/create', methods=['GET', 'POST'])
 @login_required
@@ -34,13 +37,53 @@ def create():
 @deck_bp.route('/deck/<int:deck_id>')
 @login_required
 def view_deck(deck_id):
-    deck = get_deck_by_id(deck_id, session['user_id'])
+    deck = get_deck_by_id_for_user(deck_id, session['user_id'])
     if not deck:
-         flash('Deck not found.', 'error')
-         return redirect(url_for('deck.dashboard'))
+        flash('Deck not found.', 'error')
+        return redirect(url_for('deck.dashboard'))
     cards = get_cards_by_deck(deck_id)
     is_owner = (deck['user_id'] == session['user_id'])
-    return render_template('deck_view.html', deck=deck, cards=cards, is_owner=is_owner)
+    shares = get_shares_for_deck(deck_id) if is_owner else []
+    return render_template('deck_view.html', deck=deck, cards=cards,
+                           is_owner=is_owner, shares=shares)
+
+
+@deck_bp.route('/deck/<int:deck_id>/share', methods=['POST'])
+@login_required
+def share(deck_id):
+    deck = get_deck_by_id(deck_id, session['user_id'])
+    if not deck:
+        flash('Deck not found.', 'error')
+        return redirect(url_for('deck.dashboard'))
+    username = request.form.get('username', '').strip()
+    if not username:
+        flash('Enter a username to share with.', 'error')
+        return redirect(url_for('deck.view_deck', deck_id=deck_id))
+    if username == session.get('username'):
+        flash('You cannot share a deck with yourself.', 'error')
+        return redirect(url_for('deck.view_deck', deck_id=deck_id))
+    target = get_user_by_username(username)
+    if not target:
+        flash(f'No user found with username "{username}".', 'error')
+        return redirect(url_for('deck.view_deck', deck_id=deck_id))
+    ok, err = share_deck(deck_id, target['id'])
+    if ok:
+        flash(f'Deck shared with {username}.', 'success')
+    else:
+        flash(err, 'error')
+    return redirect(url_for('deck.view_deck', deck_id=deck_id))
+
+
+@deck_bp.route('/deck/<int:deck_id>/unshare/<int:user_id>', methods=['POST'])
+@login_required
+def unshare(deck_id, user_id):
+    deck = get_deck_by_id(deck_id, session['user_id'])
+    if not deck:
+        flash('Deck not found.', 'error')
+        return redirect(url_for('deck.dashboard'))
+    unshare_deck(deck_id, user_id)
+    flash('Share removed.', 'success')
+    return redirect(url_for('deck.view_deck', deck_id=deck_id))
 
 @deck_bp.route('/deck/<int:deck_id>/edit', methods=['GET', 'POST'])
 @login_required
@@ -75,7 +118,7 @@ def delete(deck_id):
 @deck_bp.route('/deck/<int:deck_id>/study')
 @login_required
 def study(deck_id):
-    deck = get_deck_by_id(deck_id, session['user_id'])
+    deck = get_deck_by_id_for_user(deck_id, session['user_id'])
     if not deck:
         flash('Deck not found.', 'error')
         return redirect(url_for('deck.dashboard'))

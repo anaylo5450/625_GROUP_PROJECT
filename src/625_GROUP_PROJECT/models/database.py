@@ -64,6 +64,24 @@ def migrate_decks():
     conn.close()
 
 
+def migrate_shares():
+    """Add deck_shares table if it doesn't exist yet."""
+    conn = get_db()
+    conn.executescript('''
+        CREATE TABLE IF NOT EXISTS deck_shares (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            deck_id INTEGER NOT NULL,
+            shared_with_user_id INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(deck_id, shared_with_user_id),
+            FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE,
+            FOREIGN KEY (shared_with_user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+    ''')
+    conn.commit()
+    conn.close()
+
+
 def migrate_stats():
     """Add study_sessions table if it doesn't exist yet."""
     conn = get_db()

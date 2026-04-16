@@ -1,5 +1,5 @@
 from flask import Flask
-from models.database import init_db, migrate_decks, migrate_stats
+from models.database import init_db, migrate_decks, migrate_stats, migrate_shares
 from controllers.auth_controller import auth_bp
 from controllers.deck_controller import deck_bp
 from controllers.flashcard_controller import flashcard_bp
@@ -17,6 +17,7 @@ app.register_blueprint(stats_bp)
 init_db()
 migrate_decks()
 migrate_stats()
+migrate_shares()
 
 if __name__ == '__main__':
     app.run(debug=True)
