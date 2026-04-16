@@ -67,3 +67,24 @@ status: partial
 - #49: Restrict edit and delete to deck owner
 - #48: Share deck directly with another user by username
 - #42: Generate shareable link for a public deck
+
+---
+session: 2026-04-16T00:03:00
+status: partial
+---
+## Done
+- #49: is_owner flag computed in view_deck route and passed to deck_view.html
+- Add Card, Edit Deck, card edit/delete buttons gated behind {% if is_owner %}
+- Backend already enforced ownership via get_deck_by_id; this closes the UI gap for future public deck viewing
+- Committed as 4aaaebf on sprint-2
+
+## Decisions
+- Toggle answers button left ungated — non-owners viewing a shared/public deck should still be able to reveal answers to study
+- No new model function needed; is_owner derived from deck['user_id'] == session['user_id']
+
+## Blockers
+- none
+
+## Next
+- #48: Share deck directly with another user by username (requires new deck_shares table)
+- #42: Generate shareable link for a public deck (requires public route without login_required)
