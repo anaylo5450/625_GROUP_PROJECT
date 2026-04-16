@@ -39,7 +39,8 @@ def view_deck(deck_id):
          flash('Deck not found.', 'error')
          return redirect(url_for('deck.dashboard'))
     cards = get_cards_by_deck(deck_id)
-    return render_template('deck_view.html', deck=deck, cards=cards)
+    is_owner = (deck['user_id'] == session['user_id'])
+    return render_template('deck_view.html', deck=deck, cards=cards, is_owner=is_owner)
 
 @deck_bp.route('/deck/<int:deck_id>/edit', methods=['GET', 'POST'])
 @login_required

@@ -23,8 +23,10 @@
         </svg>
         Statistics &amp; Charts
       </a>
+      {% if is_owner %}
       <a href="{{ url_for('flashcard.create', deck_id=deck['id']) }}" class="btn btn-secondary">+ Add Card</a>
       <a href="{{ url_for('deck.edit', deck_id=deck['id']) }}" class="btn btn-ghost">⚙ Edit Deck</a>
+      {% endif %}
     </div>
   </div>
 
@@ -42,6 +44,7 @@
       <div class="card-row" style="animation-delay: {{ loop.index0 * 0.04 }}s">
         <div class="card-row-front">{{ card['front'] }}</div>
         <div class="card-row-back answers-hidden" style="visibility:hidden;user-select:none;">{{ card['back'] }}</div>
+        {% if is_owner %}
         <div class="card-row-actions">
           <a href="{{ url_for('flashcard.edit', deck_id=deck['id'], card_id=card['id']) }}"
              class="btn btn-ghost btn-sm">Edit</a>
@@ -50,6 +53,7 @@
             <button type="submit" class="btn btn-danger btn-sm">✕</button>
           </form>
         </div>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
