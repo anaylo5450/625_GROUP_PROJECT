@@ -1,91 +1,9 @@
 {% extends 'base.html' %}
-{% block title %}{{ deck.title }} Stats — Agile Addicts{% endblock %}
+{% block title %}Deck Stats — Agile Addicts{% endblock %}
 {% block content %}
-<div class="container" style="padding-top: 40px; padding-bottom: 60px;">
-
-  <div class="page-header" style="margin-bottom: 32px;">
-    <div>
-      <a href="{{ url_for('stats.overview') }}" style="font-size: 0.85rem; color: var(--text-dim);">← All Stats</a>
-      <h1>{{ deck.title }} <span class="serif-italic">Stats</span></h1>
-      {% if summary.last_studied %}
-        <p style="color: var(--text-muted);">Last studied {{ summary.last_studied[:10] }}</p>
-      {% endif %}
-    </div>
-    <a href="{{ url_for('deck.view_deck', deck_id=deck.id) }}" class="btn btn-ghost">← Back to Deck</a>
-  </div>
-
-  {# ── Summary boxes ── #}
-  {% set total_seen    = summary.total_cards_seen or 0 %}
-  {% set total_correct = summary.total_correct or 0 %}
-  {% set total_wrong   = summary.total_wrong or 0 %}
-  {% set total_sessions = summary.total_sessions or 0 %}
-  {% set completed_sessions = summary.completed_sessions or 0 %}
-  {% set accuracy = ((total_correct / total_seen * 100) | round(1)) if total_seen > 0 else 0 %}
-  {% set avg_minutes = ((summary.avg_time or 0) // 60) | int %}
-
-  <div class="stats-summary-grid" style="margin-bottom: 28px;">
-    <div class="summary-box">
-      <div class="sb-val accent-val">{{ total_sessions }}</div>
-      <div class="sb-label">Sessions</div>
-    </div>
-    <div class="summary-box">
-      <div class="sb-val">{{ completed_sessions }}</div>
-      <div class="sb-label">Completed</div>
-    </div>
-    <div class="summary-box">
-      <div class="sb-val">{{ total_seen }}</div>
-      <div class="sb-label">Cards Seen</div>
-    </div>
-    <div class="summary-box">
-      <div class="sb-val correct-val">{{ accuracy }}%</div>
-      <div class="sb-label">Accuracy</div>
-    </div>
-    <div class="summary-box">
-      <div class="sb-val correct-val">{{ total_correct }}</div>
-      <div class="sb-label">Correct</div>
-    </div>
-    <div class="summary-box">
-      <div class="sb-val wrong-val">{{ total_wrong }}</div>
-      <div class="sb-label">Incorrect</div>
-    </div>
-  </div>
-
-  {# ── Session history ── #}
-  <div class="section-title" style="margin-bottom: 16px;">Session History</div>
-
-  {% if sessions %}
-  <div class="session-list">
-    {% for s in sessions %}
-      {% set s_accuracy = ((s.cards_correct / s.cards_seen * 100) | round(1)) if s.cards_seen > 0 else 0 %}
-      {% set s_minutes = s.duration_seconds // 60 %}
-      {% set s_seconds = s.duration_seconds % 60 %}
-      <div class="session-row">
-        <div class="session-date">
-          {% if s.completed %}
-            <span class="badge-complete">Complete</span>
-          {% else %}
-            <span class="badge-partial">Partial</span>
-          {% endif %}
-          {{ s.started_at[:16].replace('T', ' ') if 'T' in s.started_at else s.started_at[:16] }}
-        </div>
-        <div class="session-stats">
-          <span class="ss">{{ s.cards_seen }} / {{ s.cards_total }} cards</span>
-          <span class="ss correct-val">{{ s.cards_correct }} correct</span>
-          <span class="ss wrong-val">{{ s.cards_wrong }} wrong</span>
-          <span class="ss" style="color: var(--success)">{{ s_accuracy }}%</span>
-          <span class="ss" style="color: var(--text-dim)">{{ s_minutes }}m {{ s_seconds }}s</span>
-        </div>
-      </div>
-    {% endfor %}
-  </div>
-  {% else %}
-  <div class="empty-state">
-    <div class="empty-state-icon">📖</div>
-    <h3>No sessions yet</h3>
-    <p>Study this deck to record your first session</p>
-    <a href="{{ url_for('deck.study', deck_id=deck.id) }}" class="btn btn-primary">Study Now</a>
-  </div>
-  {% endif %}
-
+<div class="container-md">
+  <h1>{{ deck.title }} <span class="serif-italic">Stats</span></h1>
+  <p style="color:var(--text-muted)">Per-deck stats coming in a future sprint.</p>
+  <a href="{{ url_for('deck.view_deck', deck_id=deck.id) }}" class="btn btn-ghost">← Back to Deck</a>
 </div>
 {% endblock %}

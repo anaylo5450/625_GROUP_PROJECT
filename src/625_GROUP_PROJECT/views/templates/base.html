@@ -19,7 +19,7 @@
         <li><span class="nav-username">👤 {{ session.get('username') }}</span></li>
         <li><a href="{{ url_for('deck.dashboard') }}">Decks</a></li>
         <li><a href="{{ url_for('deck.create') }}">+ New Deck</a></li>
-        <li><a href="{{ url_for('stats.overview') }}">Stats</a></li>
+        {# <li><a href="{{ url_for('stats.overview') }}">📊 Stats</a></li> #}
         <li><a href="{{ url_for('auth.logout') }}">Sign out</a></li>
       </ul>
     </div>

@@ -22,3 +22,25 @@ status: partial
 - Task 3: Wire stats_overview.html and stats_deck.html with real data (US-7.2, US-7.3)
 - Task 4: Add streak logic to stats_model.py and display in stats_overview.html (US-7.4)
 - Task 5: Image upload — migrate flashcards table, add upload route, update card_form.html (US-5.4, US-5.5)
+
+---
+session: 2026-04-16T00:01:00
+status: partial
+---
+## Done
+- Reverted stats_overview.html, stats_deck.html, base.html to stubs — those issues (#29-32) are assigned to Sailor1976 (Frits), not eyeclept
+- Confirmed GitHub assignees: eyeclept's Sprint 2 issues are #60, #42, #48, #49
+- Updated ToDo.md to reflect only eyeclept-assigned tasks
+
+## Decisions
+- Stats template work committed in 01fbff0 was Frits' scope — reverted; Frits will own that work
+- Board changes from earlier session were also reverted per user instruction; board will not be modified without explicit permission
+
+## Blockers
+- none
+
+## Next
+- #60: Hide answers before starting a study session
+- #49: Restrict edit and delete to deck owner
+- #48: Share deck directly with another user by username
+- #42: Generate shareable link for a public deck
