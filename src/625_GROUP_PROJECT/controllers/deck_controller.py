@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from controllers.auth_controller import login_required
 from models.deck_model import (get_decks_by_user, get_deck_by_id, get_deck_by_id_for_user,
-                               create_deck, update_deck, delete_deck,
+                               get_public_deck, create_deck, update_deck, delete_deck,
                                share_deck, unshare_deck, get_shares_for_deck, get_shared_decks)
 from models.flashcard_model import get_cards_by_deck
 from models.user_model import get_user_by_username
@@ -44,8 +44,10 @@ def view_deck(deck_id):
     cards = get_cards_by_deck(deck_id)
     is_owner = (deck['user_id'] == session['user_id'])
     shares = get_shares_for_deck(deck_id) if is_owner else []
+    public_url = url_for('deck.public_view', deck_id=deck_id, _external=True) \
+        if str(deck['visibility']) == '1' else None
     return render_template('deck_view.html', deck=deck, cards=cards,
-                           is_owner=is_owner, shares=shares)
+                           is_owner=is_owner, shares=shares, public_url=public_url)
 
 
 @deck_bp.route('/deck/<int:deck_id>/share', methods=['POST'])
@@ -57,7 +59,11 @@ def share(deck_id):
         return redirect(url_for('deck.dashboard'))
     username = request.form.get('username', '').strip()
     if not username:
-        flash('Enter a username to share with.', 'error')
+        if str(deck['visibility']) == '1':
+            public_url = url_for('deck.public_view', deck_id=deck_id, _external=True)
+            flash(f'Public link: {public_url}', 'success')
+        else:
+            flash('Enter a username to share with a specific user, or set the deck to Public for a shareable link.', 'error')
         return redirect(url_for('deck.view_deck', deck_id=deck_id))
     if username == session.get('username'):
         flash('You cannot share a deck with yourself.', 'error')
@@ -114,6 +120,16 @@ def delete(deck_id):
         delete_deck(deck_id, session['user_id'])
         flash('Deck deleted.', 'success')
     return redirect(url_for('deck.dashboard'))
+
+@deck_bp.route('/deck/<int:deck_id>/public')
+def public_view(deck_id):
+    deck = get_public_deck(deck_id)
+    if not deck:
+        flash('This deck is not publicly available.', 'error')
+        return redirect(url_for('auth.login'))
+    cards = get_cards_by_deck(deck_id)
+    return render_template('deck_view_public.html', deck=deck, cards=cards)
+
 
 @deck_bp.route('/deck/<int:deck_id>/study')
 @login_required

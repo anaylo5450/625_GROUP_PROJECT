@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ deck['title'] }} — Agile Addicts</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a href="{{ url_for('auth.login') }}" class="navbar-brand">
+        <span class="dot"></span>
+        Agile Addicts
+      </a>
+      <ul class="navbar-nav">
+        <li><a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm">Sign in</a></li>
+      </ul>
+    </div>
+  </nav>
+
+<div class="container" style="padding-top: 40px; padding-bottom: 60px;">
+  <div class="deck-hero">
+    <div class="deck-hero-header">
+      <div class="deck-color-dot" style="background: {{ deck['color'] }}; box-shadow: 0 0 10px {{ deck['color'] }}80;"></div>
+      <div>
+        <p style="font-size:0.85rem; color:var(--text-dim);">Public Deck</p>
+        <h1>{{ deck['title'] }}</h1>
+        {% if deck['description'] %}<p>{{ deck['description'] }}</p>{% endif %}
+      </div>
+    </div>
+    <div class="deck-actions">
+      <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Sign in to Study</a>
+    </div>
+  </div>
+
+  <div class="cards-section">
+    <div class="section-title" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>{{ cards|length }} Card{{ 's' if cards|length != 1 }}</span>
+      {% if cards %}
+      <button id="toggleAnswers" class="btn btn-ghost btn-sm" onclick="toggleAnswers()" style="font-size:0.8rem;">Show Answers</button>
+      {% endif %}
+    </div>
+
+    {% if cards %}
+    <div class="cards-list">
+      {% for card in cards %}
+      <div class="card-row" style="animation-delay: {{ loop.index0 * 0.04 }}s">
+        <div class="card-row-front">{{ card['front'] }}</div>
+        <div class="card-row-back" style="visibility:hidden;user-select:none;">{{ card['back'] }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">🃏</div>
+      <h3>No cards yet</h3>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+  let answersVisible = false;
+  function toggleAnswers() {
+    answersVisible = !answersVisible;
+    document.querySelectorAll('.card-row-back').forEach(el => {
+      el.style.visibility = answersVisible ? 'visible' : 'hidden';
+      el.style.userSelect = answersVisible ? '' : 'none';
+    });
+    document.getElementById('toggleAnswers').textContent = answersVisible ? 'Hide Answers' : 'Show Answers';
+  }
+</script>
+</body>
+</html>

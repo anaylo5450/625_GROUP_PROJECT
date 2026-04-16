@@ -47,6 +47,15 @@ def delete_deck(deck_id, user_id):
     conn.commit()
     conn.close()
 
+def get_public_deck(deck_id):
+    """Return a deck only if it is publicly visible."""
+    conn = get_db()
+    deck = conn.execute(
+        "SELECT * FROM decks WHERE id = ? AND visibility IN ('1', 1)", (deck_id,)
+    ).fetchone()
+    conn.close()
+    return deck
+
 def get_deck_by_id_for_user(deck_id, user_id):
     """Return a deck if the user owns it or it has been shared with them."""
     conn = get_db()

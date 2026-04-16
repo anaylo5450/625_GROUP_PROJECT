@@ -67,6 +67,22 @@
     {% endif %}
   </div>
 
+  {% if is_owner and public_url %}
+  <div class="cards-section" style="margin-top: 32px;">
+    <div class="section-title">Public Link</div>
+    <p style="color:var(--text-muted); font-size:0.85rem; margin-top:8px;">
+      This deck is public. Anyone with the link below can view and study it without logging in.
+    </p>
+    <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap; align-items:center;">
+      <input id="publicUrl" type="text" value="{{ public_url }}" readonly
+             style="flex:1; min-width:200px; background:var(--surface-2); border:1px solid var(--border);
+                    border-radius:var(--radius-sm); padding:10px 14px; color:var(--text-muted);
+                    font-size:0.85rem;">
+      <button class="btn btn-ghost btn-sm" onclick="copyPublicUrl()" id="copyBtn">Copy</button>
+    </div>
+  </div>
+  {% endif %}
+
   {% if is_owner %}
   <div class="cards-section" style="margin-top: 32px;">
     <div class="section-title">Share This Deck</div>
@@ -102,6 +118,15 @@
 {% endblock %}
 {% block scripts %}
 <script>
+  function copyPublicUrl() {
+    const input = document.getElementById('publicUrl');
+    navigator.clipboard.writeText(input.value).then(() => {
+      const btn = document.getElementById('copyBtn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
+    });
+  }
+
   let answersVisible = false;
   function toggleAnswers() {
     answersVisible = !answersVisible;
