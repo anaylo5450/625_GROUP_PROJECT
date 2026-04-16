@@ -1,9 +1,99 @@
 {% extends 'base.html' %}
 {% block title %}Stats — Agile Addicts{% endblock %}
 {% block content %}
-<div class="container-md">
-  <h1>Stats <span class="serif-italic">Overview</span></h1>
-  <p style="color:var(--text-muted)">Progress tracking coming in a future sprint.</p>
-  <a href="{{ url_for('deck.dashboard') }}" class="btn btn-ghost">← Back to Dashboard</a>
+<div class="container" style="padding-top: 40px; padding-bottom: 60px;">
+
+  <div class="page-header" style="margin-bottom: 32px;">
+    <div>
+      <h1>Your <span class="serif-italic">Progress</span></h1>
+      <p style="color: var(--text-muted);">All-time study statistics across every deck</p>
+    </div>
+    <a href="{{ url_for('deck.dashboard') }}" class="btn btn-ghost">← Decks</a>
+  </div>
+
+  {# ── Overall summary ── #}
+  {% set total_seen   = overall.cards_seen or 0 %}
+  {% set total_correct = overall.correct or 0 %}
+  {% set total_wrong   = overall.wrong or 0 %}
+  {% set total_sessions = overall.total_sessions or 0 %}
+  {% set accuracy = ((total_correct / total_seen * 100) | round(1)) if total_seen > 0 else 0 %}
+  {% set total_minutes = ((overall.total_time or 0) // 60) %}
+
+  <div class="stats-summary-grid" style="margin-bottom: 28px;">
+    <div class="summary-box">
+      <div class="sb-val accent-val">{{ total_sessions }}</div>
+      <div class="sb-label">Sessions</div>
+    </div>
+    <div class="summary-box">
+      <div class="sb-val">{{ total_seen }}</div>
+      <div class="sb-label">Cards Seen</div>
+    </div>
+    <div class="summary-box">
+      <div class="sb-val correct-val">{{ accuracy }}%</div>
+      <div class="sb-label">Accuracy</div>
+    </div>
+    <div class="summary-box">
+      <div class="sb-val correct-val">{{ total_correct }}</div>
+      <div class="sb-label">Correct</div>
+    </div>
+    <div class="summary-box">
+      <div class="sb-val wrong-val">{{ total_wrong }}</div>
+      <div class="sb-label">Incorrect</div>
+    </div>
+    <div class="summary-box">
+      <div class="sb-val">{{ total_minutes }}</div>
+      <div class="sb-label">Minutes Studied</div>
+    </div>
+  </div>
+
+  {# ── 14-day activity chart ── #}
+  <div class="stats-card" style="margin-bottom: 28px;">
+    <div class="stats-card-title">Activity — Last 14 Days</div>
+    {% if daily %}
+      {% set max_cards = daily | map(attribute='cards') | max %}
+      <div class="activity-chart">
+        {% for day in daily %}
+          {% set bar_pct = ((day.cards / max_cards * 100) | int) if max_cards > 0 else 0 %}
+          <div class="activity-bar-wrap">
+            <div class="activity-bar"
+                 style="height: {{ bar_pct }}%;"
+                 title="{{ day.day }}: {{ day.cards }} card{{ 's' if day.cards != 1 }}"></div>
+            <div class="activity-day">{{ day.day[5:] }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p style="color: var(--text-dim); margin-top: 16px;">No activity in the last 14 days. Start studying!</p>
+    {% endif %}
+  </div>
+
+  {# ── Per-deck breakdown ── #}
+  <div class="section-title" style="margin-bottom: 16px;">By Deck</div>
+
+  {% if per_deck %}
+  <div class="stats-deck-list">
+    {% for d in per_deck %}
+      {% set d_accuracy = ((d.correct / d.cards_seen * 100) | round(1)) if d.cards_seen and d.cards_seen > 0 else 0 %}
+      <a href="{{ url_for('stats.deck_stats', deck_id=d.deck_id) }}" class="stats-deck-row">
+        <div class="stats-deck-dot" style="background: {{ d.color or 'var(--accent)' }};"></div>
+        <div class="stats-deck-name">{{ d.title }}</div>
+        <div class="stats-deck-nums">
+          <span class="sdn">{{ d.sessions or 0 }} session{{ 's' if (d.sessions or 0) != 1 }}</span>
+          <span class="sdn">{{ d.cards_seen or 0 }} cards</span>
+          <span class="sdn" style="color: {{ 'var(--success)' if d_accuracy >= 70 else 'var(--warning)' if d_accuracy >= 40 else 'var(--error)' }}">{{ d_accuracy }}%</span>
+        </div>
+        <span style="color: var(--text-dim); font-size: 0.85rem;">→</span>
+      </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">📊</div>
+    <h3>No study sessions yet</h3>
+    <p>Complete a study session to see your stats here</p>
+    <a href="{{ url_for('deck.dashboard') }}" class="btn btn-primary">Go to Decks</a>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}
