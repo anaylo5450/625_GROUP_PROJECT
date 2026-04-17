@@ -44,6 +44,9 @@ def create_app(test_config=None):
         SESSION_COOKIE_SECURE=not app.debug,
     )
 
+    app.config["UPLOAD_FOLDER"] = os.path.join(app.root_path, "static", "uploads")
+    app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
+
     # allow tests to override any config value
     if test_config is not None:
         app.config.from_mapping(test_config)
@@ -57,6 +60,7 @@ def create_app(test_config=None):
 
     # ensure the instance folder exists for the DB and log file
     os.makedirs(app.instance_path, exist_ok=True)
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
     # write logs to both the instance folder and stdout
     logging.basicConfig(

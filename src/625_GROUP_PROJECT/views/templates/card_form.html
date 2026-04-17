@@ -12,28 +12,86 @@
     <div class="card-preview-flip" id="previewCard" title="Click to flip preview">
       <div class="card-inner" id="cardInner">
         <div class="card-face card-front-face" id="previewFront">
-          <span style="color:var(--text-dim); font-style:italic">Front side preview…</span>
+          <div id="previewFrontContent"
+               style="width:100%; height:100%; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:12px; text-align:left; padding:16px; box-sizing:border-box; overflow:hidden;">
+
+            <div style="width:40%; min-width:90px; max-width:140px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <img id="previewFrontImage"
+                   src="#"
+                   alt="Front image preview"
+                   style="display:none; max-width:100%; max-height:120px; border-radius:8px; object-fit:contain;">
+            </div>
+
+            <div id="previewFrontText"
+                 style="flex:1; min-width:0; word-break:break-word; white-space:pre-wrap; overflow:hidden;">
+              <span style="color:var(--text-dim); font-style:italic;">Front side preview…</span>
+            </div>
+          </div>
         </div>
+
         <div class="card-face card-back-face" id="previewBack">
-          <span style="opacity:0.6; font-style:italic">Back side preview…</span>
+          <div id="previewBackContent"
+               style="width:100%; height:100%; display:flex; flex-direction:row; align-items:center; justify-content:center; gap:12px; text-align:left; padding:16px; box-sizing:border-box; overflow:hidden;">
+
+            <div style="width:40%; min-width:90px; max-width:140px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+              <img id="previewBackImage"
+                   src="#"
+                   alt="Back image preview"
+                   style="display:none; max-width:100%; max-height:120px; border-radius:8px; object-fit:contain;">
+            </div>
+
+            <div id="previewBackText"
+                 style="flex:1; min-width:0; word-break:break-word; white-space:pre-wrap; overflow:hidden;">
+              <span style="opacity:0.6; font-style:italic;">Back side preview…</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
     <p class="flip-hint">👆 Click card to preview flip</p>
 
-    <form method="POST" id="cardForm">
+    <form method="POST" id="cardForm" enctype="multipart/form-data">
       <div class="card-editor">
         <div>
           <div class="card-side-label">✦ Front (Question)</div>
           <textarea class="form-control" name="front" id="frontInput"
                     placeholder="Type the question or term…"
                     style="min-height: 120px;" required>{{ card['front'] if card else '' }}</textarea>
+
+          <div style="margin-top:12px;">
+            <label for="frontImageInput" class="card-side-label">✦ Front Image (Optional)</label>
+            <input type="file" name="front_image" id="frontImageInput" accept="image/*" class="form-control">
+          </div>
+
+          {% if card and card['front_image_filename'] %}
+          <div style="margin-top:12px;">
+            <p style="margin-bottom:8px;">Current front image:</p>
+            <img src="{{ url_for('static', filename='uploads/' + card['front_image_filename']) }}"
+                 alt="Current front image"
+                 style="max-width:100%; max-height:180px; border-radius:8px;">
+          </div>
+          {% endif %}
         </div>
+
         <div>
           <div class="card-side-label">✦ Back (Answer)</div>
           <textarea class="form-control" name="back" id="backInput"
                     placeholder="Type the answer or definition…"
                     style="min-height: 120px;" required>{{ card['back'] if card else '' }}</textarea>
+
+          <div style="margin-top:12px;">
+            <label for="backImageInput" class="card-side-label">✦ Back Image (Optional)</label>
+            <input type="file" name="back_image" id="backImageInput" accept="image/*" class="form-control">
+          </div>
+
+          {% if card and card['back_image_filename'] %}
+          <div style="margin-top:12px;">
+            <p style="margin-bottom:8px;">Current back image:</p>
+            <img src="{{ url_for('static', filename='uploads/' + card['back_image_filename']) }}"
+                 alt="Current back image"
+                 style="max-width:100%; max-height:180px; border-radius:8px;">
+          </div>
+          {% endif %}
         </div>
       </div>
 
@@ -61,49 +119,80 @@
   {% endif %}
 </div>
 {% endblock %}
+
 {% block scripts %}
 <script>
   const frontInput = document.getElementById('frontInput');
-  const backInput  = document.getElementById('backInput');
+  const backInput = document.getElementById('backInput');
+  const frontImageInput = document.getElementById('frontImageInput');
+  const backImageInput = document.getElementById('backImageInput');
+
   const previewFront = document.getElementById('previewFront');
-  const previewBack  = document.getElementById('previewBack');
-  const previewCard  = document.getElementById('previewCard');
-  const cardInner    = document.getElementById('cardInner');
+  const previewBack = document.getElementById('previewBack');
+  const previewCard = document.getElementById('previewCard');
+  const cardInner = document.getElementById('cardInner');
+
+  const previewFrontText = document.getElementById('previewFrontText');
+  const previewBackText = document.getElementById('previewBackText');
+  const previewFrontImage = document.getElementById('previewFrontImage');
+  const previewBackImage = document.getElementById('previewBackImage');
 
   let isFlipped = false;
 
   function applyFlip() {
     cardInner.style.transform = isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)';
-    // Belt-and-suspenders: explicitly hide the non-visible face so
-    // backface-visibility failures don't bleed through on some browsers.
     previewFront.style.visibility = isFlipped ? 'hidden' : 'visible';
-    previewBack.style.visibility  = isFlipped ? 'visible' : 'hidden';
+    previewBack.style.visibility = isFlipped ? 'visible' : 'hidden';
   }
 
-  // Click the card wrapper to flip — never auto-flip
   previewCard.addEventListener('click', () => {
     isFlipped = !isFlipped;
     applyFlip();
   });
 
-  // initialise visibility on load
   applyFlip();
 
-  function updatePreview() {
+  function updateTextPreview() {
     const frontVal = frontInput.value.trim();
-    const backVal  = backInput.value.trim();
-    previewFront.innerHTML = frontVal
-      ? `<span>${frontVal}</span>`
-      : `<span style="color:var(--text-dim);font-style:italic">Front side preview…</span>`;
-    previewBack.innerHTML = backVal
-      ? `<span>${backVal}</span>`
-      : `<span style="opacity:0.6;font-style:italic">Back side preview…</span>`;
+    const backVal = backInput.value.trim();
+
+    previewFrontText.innerHTML = frontVal
+      ? `<div style="width:100%; word-break:break-word; white-space:pre-wrap; overflow-wrap:anywhere;">${frontVal}</div>`
+      : `<span style="color:var(--text-dim); font-style:italic;">Front side preview…</span>`;
+
+    previewBackText.innerHTML = backVal
+      ? `<div style="width:100%; word-break:break-word; white-space:pre-wrap; overflow-wrap:anywhere;">${backVal}</div>`
+      : `<span style="opacity:0.6; font-style:italic;">Back side preview…</span>`;
   }
 
-  frontInput.addEventListener('input', updatePreview);
-  backInput.addEventListener('input', updatePreview);
+  function updateImagePreview(inputEl, imageEl) {
+    const file = inputEl.files[0];
 
-  // Populate preview on edit (card already has content)
-  updatePreview();
+    if (!file) {
+      imageEl.src = '#';
+      imageEl.style.display = 'none';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      imageEl.src = e.target.result;
+      imageEl.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  frontInput.addEventListener('input', updateTextPreview);
+  backInput.addEventListener('input', updateTextPreview);
+
+  frontImageInput.addEventListener('change', function() {
+    updateImagePreview(frontImageInput, previewFrontImage);
+  });
+
+  backImageInput.addEventListener('change', function() {
+    updateImagePreview(backImageInput, previewBackImage);
+  });
+
+  updateTextPreview();
 </script>
 {% endblock %}

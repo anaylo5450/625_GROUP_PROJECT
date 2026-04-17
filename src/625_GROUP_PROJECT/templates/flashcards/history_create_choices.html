@@ -12,7 +12,7 @@
     .question-box{font-size:18px;background:#111;padding:14px;border-radius:4px;
                   margin-bottom:24px;border:1px solid #333;}
     label{display:block;font-size:16px;margin-bottom:4px;}
-    input[type=text]{
+    input[type=text], input[type=file]{
       width:100%;box-sizing:border-box;padding:10px;font-size:16px;
       background:#111;color:#fff;border:1px solid #444;border-radius:4px;margin-bottom:14px;}
     .correct-label{font-size:16px;margin-bottom:8px;}
@@ -27,15 +27,21 @@
   <div class="container">
     <h1>Add Answer Choices</h1>
     <p class="question-box">{{ question }}</p>
-    <form method="post">
+    <form method="post" enctype="multipart/form-data">
       <label>Choice A</label>
       <input type="text" name="a1" required>
+
       <label>Choice B</label>
       <input type="text" name="a2" required>
+
       <label>Choice C</label>
       <input type="text" name="a3" required>
+
       <label>Choice D</label>
       <input type="text" name="a4" required>
+
+      <label for="image">Flashcard Image (optional)</label>
+      <input type="file" id="image" name="image" accept="image/*">
 
       <p class="correct-label">Which choice is correct?</p>
       <div class="radio-group">

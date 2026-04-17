@@ -42,8 +42,28 @@
     <div class="cards-list">
       {% for card in cards %}
       <div class="card-row" style="animation-delay: {{ loop.index0 * 0.04 }}s">
-        <div class="card-row-front">{{ card['front'] }}</div>
-        <div class="card-row-back answers-hidden" style="visibility:hidden;user-select:none;">{{ card['back'] }}</div>
+        <div class="card-row-front">
+          {% if card['front_image_filename'] %}
+          <div style="margin-bottom:10px;">
+            <img src="{{ url_for('static', filename='uploads/' + card['front_image_filename']) }}"
+                 alt="Front image"
+                 style="max-width:140px; max-height:120px; border-radius:8px; object-fit:contain; display:block;">
+          </div>
+          {% endif %}
+          <div>{{ card['front'] }}</div>
+        </div>
+
+        <div class="card-row-back answers-hidden" style="visibility:hidden;user-select:none;">
+          {% if card['back_image_filename'] %}
+          <div style="margin-bottom:10px;">
+            <img src="{{ url_for('static', filename='uploads/' + card['back_image_filename']) }}"
+                 alt="Back image"
+                 style="max-width:140px; max-height:120px; border-radius:8px; object-fit:contain; display:block;">
+          </div>
+          {% endif %}
+          <div>{{ card['back'] }}</div>
+        </div>
+
         {% if is_owner %}
         <div class="card-row-actions">
           <a href="{{ url_for('flashcard.edit', deck_id=deck['id'], card_id=card['id']) }}"

@@ -73,7 +73,8 @@ class FlashcardQuestion(db.Model):
     quiz_name: Mapped[str] = mapped_column(String, nullable=False)
     question: Mapped[str] = mapped_column(String, nullable=False)
 
-    image_filename: Mapped[str | None] = mapped_column(String, nullable=True)
+    front_image_filename: Mapped[str | None] = mapped_column(String, nullable=True)
+    back_image_filename: Mapped[str | None] = mapped_column(String, nullable=True)
 
     choice1: Mapped[str] = mapped_column(String, nullable=False)
     choice2: Mapped[str] = mapped_column(String, nullable=False)

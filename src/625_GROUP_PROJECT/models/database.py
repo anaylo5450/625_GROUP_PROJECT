@@ -43,6 +43,8 @@ def init_db():
             deck_id INTEGER NOT NULL,
             front TEXT NOT NULL,
             back TEXT NOT NULL,
+            front_image_filename TEXT,
+            back_image_filename TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (deck_id) REFERENCES decks(id) ON DELETE CASCADE

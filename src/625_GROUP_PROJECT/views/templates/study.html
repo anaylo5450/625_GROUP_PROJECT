@@ -19,11 +19,31 @@
     <div class="study-card-inner">
       <div class="study-card-face study-front">
         <div class="face-label">Question</div>
-        <div class="face-text" id="cardFront"></div>
+        <div style="display:flex; align-items:center; justify-content:center; gap:16px; width:100%; height:100%;">
+          <div id="cardFrontImageWrap"
+               style="width:40%; min-width:90px; max-width:180px; display:none; align-items:center; justify-content:center; flex-shrink:0;">
+            <img id="cardFrontImage"
+                 src=""
+                 alt="Front image"
+                 style="max-width:100%; max-height:180px; border-radius:8px; object-fit:contain;">
+          </div>
+          <div class="face-text" id="cardFront"
+               style="flex:1; min-width:0; word-break:break-word; white-space:pre-wrap; overflow-wrap:anywhere;"></div>
+        </div>
       </div>
       <div class="study-card-face study-back">
         <div class="face-label">Answer</div>
-        <div class="face-text" id="cardBack"></div>
+        <div style="display:flex; align-items:center; justify-content:center; gap:16px; width:100%; height:100%;">
+          <div id="cardBackImageWrap"
+               style="width:40%; min-width:90px; max-width:180px; display:none; align-items:center; justify-content:center; flex-shrink:0;">
+            <img id="cardBackImage"
+                 src=""
+                 alt="Back image"
+                 style="max-width:100%; max-height:180px; border-radius:8px; object-fit:contain;">
+          </div>
+          <div class="face-text" id="cardBack"
+               style="flex:1; min-width:0; word-break:break-word; white-space:pre-wrap; overflow-wrap:anywhere;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -86,6 +106,10 @@
   const cardEl       = document.getElementById('studyCard');
   const frontEl      = document.getElementById('cardFront');
   const backEl       = document.getElementById('cardBack');
+  const frontImgEl   = document.getElementById('cardFrontImage');
+  const backImgEl    = document.getElementById('cardBackImage');
+  const frontImgWrap = document.getElementById('cardFrontImageWrap');
+  const backImgWrap  = document.getElementById('cardBackImageWrap');
   const counterEl    = document.getElementById('studyCounter');
   const progressLabel= document.getElementById('progressLabel');
   const progressPct  = document.getElementById('progressPct');
@@ -105,8 +129,25 @@
 
   function showCard(index) {
     const card = cards[index];
-    frontEl.textContent = card.front;
-    backEl.textContent  = card.back;
+    frontEl.textContent = card.front || '';
+    backEl.textContent  = card.back || '';
+
+    if (card.front_image_filename) {
+      frontImgEl.src = `/static/uploads/${card.front_image_filename}`;
+      frontImgWrap.style.display = 'flex';
+    } else {
+      frontImgEl.src = '';
+      frontImgWrap.style.display = 'none';
+    }
+
+    if (card.back_image_filename) {
+      backImgEl.src = `/static/uploads/${card.back_image_filename}`;
+      backImgWrap.style.display = 'flex';
+    } else {
+      backImgEl.src = '';
+      backImgWrap.style.display = 'none';
+    }
+
     counterEl.textContent = `${index + 1} / ${totalCards}`;
     progressLabel.textContent = `Card ${index + 1} of ${totalCards}`;
     const pct = Math.round((index / totalCards) * 100);
