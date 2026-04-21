@@ -9,8 +9,12 @@ stats_bp = Blueprint('stats', __name__)
 @login_required
 def overview():
     per_deck, overall, daily = get_user_stats(session['user_id'])
-    return render_template('stats_overview.html',
-                           per_deck=per_deck, overall=overall, daily=daily)
+    return render_template(
+        'stats_overview.html',
+        per_deck=per_deck,
+        overall=overall,
+        daily=daily
+    )
 
 @stats_bp.route('/deck/<int:deck_id>/stats')
 @login_required
@@ -18,17 +22,34 @@ def deck_stats(deck_id):
     deck = get_deck_by_id(deck_id, session['user_id'])
     if not deck:
         return redirect(url_for('deck.dashboard'))
-    sessions, summary = get_deck_stats(deck_id, session['user_id'])
-    return render_template('stats_deck.html', deck=dict(deck),
-                           sessions=sessions, summary=summary)
 
-# ── API endpoints called from study.html via fetch ──
+    sessions, summary, daily_progress = get_deck_stats(deck_id, session['user_id'])
+
+    labels = [row['study_day'] for row in daily_progress]
+    scores = [
+        int(row['score_percent'])
+        for row in daily_progress
+        if row.get('score_percent') is not None
+    ]
+
+    return render_template(
+        'stats_deck.html',
+        deck=dict(deck),
+        sessions=sessions,
+        summary=summary,
+        labels=labels,
+        scores=scores
+    )
 
 @stats_bp.route('/api/session/start', methods=['POST'])
 @login_required
 def api_start_session():
     data = request.get_json()
-    sid = create_session(session['user_id'], data['deck_id'], data['cards_total'])
+    sid = create_session(
+        session['user_id'],
+        data['deck_id'],
+        data['cards_total']
+    )
     return jsonify({'session_id': sid})
 
 @stats_bp.route('/api/session/finish', methods=['POST'])
