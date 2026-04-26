@@ -60,7 +60,12 @@
 
           <div style="margin-top:12px;">
             <label for="frontImageInput" class="card-side-label">✦ Front Image (Optional)</label>
-            <input type="file" name="front_image" id="frontImageInput" accept="image/*" class="form-control">
+            <input type="file" name="front_image" id="frontImageInput"
+                   accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
+                   class="form-control">
+            <p style="margin-top:6px; font-size:0.85rem; color:var(--text-dim);">
+              Allowed types: PNG, JPG, JPEG, GIF, WEBP. Maximum size: 5 MB.
+            </p>
           </div>
 
           {% if card and card['front_image_filename'] %}
@@ -81,7 +86,12 @@
 
           <div style="margin-top:12px;">
             <label for="backImageInput" class="card-side-label">✦ Back Image (Optional)</label>
-            <input type="file" name="back_image" id="backImageInput" accept="image/*" class="form-control">
+            <input type="file" name="back_image" id="backImageInput"
+                   accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
+                   class="form-control">
+            <p style="margin-top:6px; font-size:0.85rem; color:var(--text-dim);">
+              Allowed types: PNG, JPG, JPEG, GIF, WEBP. Maximum size: 5 MB.
+            </p>
           </div>
 
           {% if card and card['back_image_filename'] %}

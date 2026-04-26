@@ -16,11 +16,22 @@ def allowed_image(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
 
 
-def save_uploaded_image(file_storage, deck_id, side_prefix):
+def validate_uploaded_image(file_storage, side_label):
+    """
+    Returns None when the file is valid or empty.
+    Returns an error message string when invalid.
+    """
     if not file_storage or not file_storage.filename:
         return None
 
     if not allowed_image(file_storage.filename):
+        return f"{side_label} image must be PNG, JPG, JPEG, GIF, or WEBP."
+
+    return None
+
+
+def save_uploaded_image(file_storage, deck_id, side_prefix):
+    if not file_storage or not file_storage.filename:
         return None
 
     safe_name = secure_filename(file_storage.filename)
@@ -55,16 +66,19 @@ def create(deck_id):
             front_image_file = request.files.get('front_image')
             back_image_file = request.files.get('back_image')
 
+            front_error = validate_uploaded_image(front_image_file, 'Front')
+            back_error = validate_uploaded_image(back_image_file, 'Back')
+
+            if front_error:
+                flash(front_error, 'error')
+                return render_template('card_form.html', deck=deck, card=None, action='Create')
+
+            if back_error:
+                flash(back_error, 'error')
+                return render_template('card_form.html', deck=deck, card=None, action='Create')
+
             front_image_filename = save_uploaded_image(front_image_file, deck_id, 'front')
             back_image_filename = save_uploaded_image(back_image_file, deck_id, 'back')
-
-            if front_image_file and front_image_file.filename and front_image_filename is None:
-                flash('Front image must be png, jpg, jpeg, gif, or webp.', 'error')
-                return render_template('card_form.html', deck=deck, card=None, action='Create')
-
-            if back_image_file and back_image_file.filename and back_image_filename is None:
-                flash('Back image must be png, jpg, jpeg, gif, or webp.', 'error')
-                return render_template('card_form.html', deck=deck, card=None, action='Create')
 
             create_card(
                 deck_id,
@@ -110,19 +124,22 @@ def edit(deck_id, card_id):
             front_image_file = request.files.get('front_image')
             back_image_file = request.files.get('back_image')
 
+            front_error = validate_uploaded_image(front_image_file, 'Front')
+            back_error = validate_uploaded_image(back_image_file, 'Back')
+
+            if front_error:
+                flash(front_error, 'error')
+                return render_template('card_form.html', deck=deck, card=card, action='Edit')
+
+            if back_error:
+                flash(back_error, 'error')
+                return render_template('card_form.html', deck=deck, card=card, action='Edit')
+
             if front_image_file and front_image_file.filename:
-                saved_front = save_uploaded_image(front_image_file, deck_id, 'front')
-                if saved_front is None:
-                    flash('Front image must be png, jpg, jpeg, gif, or webp.', 'error')
-                    return render_template('card_form.html', deck=deck, card=card, action='Edit')
-                front_image_filename = saved_front
+                front_image_filename = save_uploaded_image(front_image_file, deck_id, 'front')
 
             if back_image_file and back_image_file.filename:
-                saved_back = save_uploaded_image(back_image_file, deck_id, 'back')
-                if saved_back is None:
-                    flash('Back image must be png, jpg, jpeg, gif, or webp.', 'error')
-                    return render_template('card_form.html', deck=deck, card=card, action='Edit')
-                back_image_filename = saved_back
+                back_image_filename = save_uploaded_image(back_image_file, deck_id, 'back')
 
             update_card(
                 card_id,
