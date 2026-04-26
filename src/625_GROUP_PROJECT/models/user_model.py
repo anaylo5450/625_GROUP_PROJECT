@@ -40,3 +40,17 @@ def get_user_by_id(user_id):
     user = conn.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchone()
     conn.close()
     return user
+
+def get_user_by_email(email):
+    conn = get_db()
+    user = conn.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchone()
+    conn.close()
+    return user
+
+def update_user_password(email, new_password):
+    from werkzeug.security import generate_password_hash
+    hashed = generate_password_hash(new_password)
+    conn = get_db()
+    conn.execute('UPDATE users SET password = ? WHERE email = ?', (hashed, email))
+    conn.commit()
+    conn.close()
