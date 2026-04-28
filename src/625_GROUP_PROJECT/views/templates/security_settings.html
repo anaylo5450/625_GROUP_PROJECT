@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Security Settings{% endblock %}
+{% block content %}
+<div class="container">
+  <h1>Security Settings</h1>
+
+  {% if pending %}
+  <section>
+    <h2>Scan this QR code with your authenticator app</h2>
+    <div class="qr-code">{{ qr_svg | safe }}</div>
+    <p>Or enter this key manually: <code>{{ totp_uri }}</code></p>
+    <form method="post" action="{{ url_for('auth.confirm_2fa') }}">
+      <label for="code">Enter the 6-digit code from your authenticator app:</label>
+      <input type="text" id="code" name="code" maxlength="6" autocomplete="one-time-code" required>
+      <button type="submit">Confirm and Enable 2FA</button>
+    </form>
+  </section>
+  {% else %}
+  <section>
+    <h2>Two-Factor Authentication</h2>
+    {% if totp_enabled %}
+      <p>Two-factor authentication is <strong>enabled</strong> on your account.</p>
+    {% else %}
+      <p>Two-factor authentication is <strong>not enabled</strong>.</p>
+      <form method="post" action="{{ url_for('auth.enable_2fa') }}">
+        <button type="submit">Enable 2FA</button>
+      </form>
+    {% endif %}
+  </section>
+  {% endif %}
+</div>
+{% endblock %}

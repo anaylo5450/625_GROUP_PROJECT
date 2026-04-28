@@ -28,9 +28,10 @@ def create_user(username, email, password, firstname, lastname):
     except Exception as e:
         db.session.rollback()
         if 'UNIQUE' in str(e):
-            if 'username' in str(e):
+            if 'users.username' in str(e):
                 return False, 'Username already taken'
-            return False, 'Email already registered'
+            if 'users.email' in str(e):
+                return False, 'Email already in use'
         return False, str(e)
 
 
@@ -68,4 +69,12 @@ def update_user_password(email, new_password):
     ).scalar_one_or_none()
     if user:
         user.password = generate_password_hash(new_password)
+        db.session.commit()
+
+
+def enable_totp(user_id, secret):
+    user = db.session.get(User, user_id)
+    if user:
+        user.totp_secret = secret
+        user.totp_enabled = 1
         db.session.commit()

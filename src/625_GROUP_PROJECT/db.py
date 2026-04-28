@@ -25,6 +25,8 @@ class User(db.Model):
     email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     password: Mapped[str] = mapped_column(String, nullable=False)
     created_at: Mapped[str | None] = mapped_column(String, nullable=True)
+    totp_secret: Mapped[str | None] = mapped_column(String, nullable=True)
+    totp_enabled: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 
 class Deck(db.Model):
@@ -108,3 +110,19 @@ def init_app(app):
     app.cli.add_command(init_db_command)
     with app.app_context():
         db.create_all()
+        _migrate_totp_columns()
+
+
+def _migrate_totp_columns():
+    """Add totp_secret and totp_enabled to users if the columns are missing."""
+    conn = db.engine.raw_connection()
+    try:
+        cur = conn.cursor()
+        existing = {row[1] for row in cur.execute("PRAGMA table_info(users)")}
+        if "totp_secret" not in existing:
+            cur.execute("ALTER TABLE users ADD COLUMN totp_secret TEXT")
+        if "totp_enabled" not in existing:
+            cur.execute("ALTER TABLE users ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+    finally:
+        conn.close()

@@ -12,7 +12,7 @@ def _row_factory(cursor, row):
 
 def get_db():
     conn = db.engine.raw_connection()
-    conn.row_factory = _row_factory
+    conn.driver_connection.row_factory = _row_factory
     return conn
 
 

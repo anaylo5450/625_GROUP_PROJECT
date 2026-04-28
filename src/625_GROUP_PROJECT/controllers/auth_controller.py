@@ -3,7 +3,10 @@ from models.user_model import create_user, get_user_by_credentials
 
 from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
-from models.user_model import create_user, get_user_by_credentials, get_user_by_email, update_user_password
+from models.user_model import (
+    create_user, get_user_by_credentials, get_user_by_email,
+    update_user_password, enable_totp,
+)
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -49,8 +52,15 @@ def register():
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
         confirm = request.form.get('confirm_password', '')
-        if not firstname or not lastname or not username or not email or not password:
-            flash('All fields are required.', 'error')
+        missing = next(
+            (name for name, val in [
+                ('firstname', firstname), ('lastname', lastname),
+                ('username', username), ('email', email), ('password', password),
+            ] if not val),
+            None,
+        )
+        if missing:
+            flash(f'{missing} is required', 'error')
         elif password != confirm:
             flash('Passwords do not match.', 'error')
         elif len(password) < 6:
@@ -129,3 +139,45 @@ def reset_password(token):
 def logout():
     session.clear()
     return redirect(url_for('auth.login'))
+
+
+@auth_bp.route('/settings/security', methods=['GET'])
+@login_required
+def security_settings():
+    from db import db, User
+    user = db.session.get(User, session['user_id'])
+    return render_template('security_settings.html', totp_enabled=bool(user.totp_enabled))
+
+
+@auth_bp.route('/settings/security/enable-2fa', methods=['POST'])
+@login_required
+def enable_2fa():
+    import pyotp, qrcode, qrcode.image.svg, io
+    secret = pyotp.random_base32()
+    session['pending_totp_secret'] = secret
+    uri = pyotp.TOTP(secret).provisioning_uri(
+        name=session['username'], issuer_name='FlashCards'
+    )
+    factory = qrcode.image.svg.SvgImage
+    buf = io.BytesIO()
+    qrcode.make(uri, image_factory=factory).save(buf)
+    qr_svg = buf.getvalue().decode('utf-8')
+    return render_template('security_settings.html', qr_svg=qr_svg, totp_uri=uri, pending=True)
+
+
+@auth_bp.route('/settings/security/confirm-2fa', methods=['POST'])
+@login_required
+def confirm_2fa():
+    import pyotp
+    secret = session.get('pending_totp_secret')
+    code = request.form.get('code', '').strip()
+    if not secret:
+        flash('Session expired. Please try again.', 'error')
+        return redirect(url_for('auth.security_settings'))
+    if pyotp.TOTP(secret).verify(code):
+        enable_totp(session['user_id'], secret)
+        session.pop('pending_totp_secret', None)
+        flash('Two-factor authentication enabled.', 'success')
+        return redirect(url_for('auth.security_settings'))
+    flash('Invalid code. Please try again.', 'error')
+    return redirect(url_for('auth.security_settings'))
