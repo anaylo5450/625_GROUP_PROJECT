@@ -228,14 +228,14 @@ def login():
             db.select(User).where(User.username == username)
         ).scalar_one_or_none()
 
-        dummy = user.password_hash if user else generate_password_hash("x")
+        dummy = user.password if user else generate_password_hash("x")
         password_ok = check_password_hash(dummy, password)
 
         if not user or not password_ok:
             logger.info("Login failed for: %s", username)
             return redirect(url_for("flashcards.login"))
 
-        session["user_id"] = user.user_id
+        session["user_id"] = user.id
         session["username"] = user.username
         session["firstname"] = user.firstname
 
@@ -366,7 +366,7 @@ def deck_list():
     decks = db.session.execute(
         db.select(Deck)
         .where(Deck.user_id == session["user_id"])
-        .order_by(Deck.deck_id.desc())
+        .order_by(Deck.id.desc())
     ).scalars().all()
 
     return render_template("flashcards/deck_list.html", decks=decks)

@@ -4,78 +4,92 @@ Emails:     caazubike0@frostburg.edu, rcbaldwin0@frostburg.edu,
             fbuningh0@frostburg.edu, apnaylor0@frostburg.edu
 Date:       2026
 Description:
-    SQLAlchemy database instance and ORM model definitions for users,
-    decks, and flashcard questions.
+    SQLAlchemy database instance and ORM model definitions mirroring the
+    existing flashcards.db schema exactly so no migration is required.
 """
-# Imports
 import click
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import Integer, String, ForeignKey
+from sqlalchemy import Integer, String, ForeignKey, UniqueConstraint
 
-# Globals
 db = SQLAlchemy()
 
 
-# Models
 class User(db.Model):
-    """
-    Input:  Column values supplied at insert time
-    Output: User ORM instance
-    Details:
-        Represents a registered user. Username must be unique.
-        Password is stored as a bcrypt hash, never plaintext.
-    """
     __tablename__ = "users"
 
-    user_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    username: Mapped[str] = mapped_column(String, nullable=False, unique=True)
     firstname: Mapped[str] = mapped_column(String, nullable=False)
     lastname: Mapped[str] = mapped_column(String, nullable=False)
-    username: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    school: Mapped[str | None] = mapped_column(String, nullable=True)
-    password_hash: Mapped[str] = mapped_column(String, nullable=False)
+    email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
+    password: Mapped[str] = mapped_column(String, nullable=False)
+    created_at: Mapped[str | None] = mapped_column(String, nullable=True)
 
 
 class Deck(db.Model):
-    """
-    Input:  Column values supplied at insert time
-    Output: Deck ORM instance
-    Details:
-        Represents a flashcard deck owned by a user.
-        Foreign key links each deck to its creator.
-    """
     __tablename__ = "decks"
 
-    deck_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.user_id"), nullable=False
-    )
-    title: Mapped[str] = mapped_column(String, nullable=False)                              #US-3.1 - Andrew
-    description: Mapped[str | None] = mapped_column(String, nullable=True)                  #US-3.2 - Andrew
-    tags: Mapped[str | None] = mapped_column(String, nullable=True)                         #US-3.3 - Andrew
-    visibility: Mapped[str] = mapped_column(String, nullable=False, default="private")      #US-3.4 - Andrew
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    title: Mapped[str] = mapped_column(String, nullable=False)
+    description: Mapped[str | None] = mapped_column(String, nullable=True)
+    tags: Mapped[str | None] = mapped_column(String, nullable=True)
+    visibility: Mapped[str] = mapped_column(String, nullable=False, default="0")
+    color: Mapped[str | None] = mapped_column(String, nullable=True, default="#6366f1")
+    created_at: Mapped[str | None] = mapped_column(String, nullable=True)
+    updated_at: Mapped[str | None] = mapped_column(String, nullable=True)
+
+
+class Flashcard(db.Model):
+    __tablename__ = "flashcards"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    deck_id: Mapped[int] = mapped_column(Integer, ForeignKey("decks.id"), nullable=False)
+    front: Mapped[str] = mapped_column(String, nullable=False)
+    back: Mapped[str] = mapped_column(String, nullable=False)
+    front_image_filename: Mapped[str | None] = mapped_column(String, nullable=True)
+    back_image_filename: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[str | None] = mapped_column(String, nullable=True)
+    updated_at: Mapped[str | None] = mapped_column(String, nullable=True)
+
+
+class StudySession(db.Model):
+    __tablename__ = "study_sessions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    deck_id: Mapped[int] = mapped_column(Integer, ForeignKey("decks.id"), nullable=False)
+    cards_total: Mapped[int] = mapped_column(Integer, nullable=False)
+    cards_seen: Mapped[int] = mapped_column(Integer, nullable=False)
+    cards_correct: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    cards_wrong: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    duration_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    completed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    started_at: Mapped[str | None] = mapped_column(String, nullable=True)
+
+
+class DeckShare(db.Model):
+    __tablename__ = "deck_shares"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    deck_id: Mapped[int] = mapped_column(Integer, ForeignKey("decks.id"), nullable=False)
+    shared_with_user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at: Mapped[str | None] = mapped_column(String, nullable=True)
+
+    __table_args__ = (UniqueConstraint("deck_id", "shared_with_user_id"),)
 
 
 class FlashcardQuestion(db.Model):
-    """
-    Input:  Column values supplied at insert time
-    Output: FlashcardQuestion ORM instance
-    Details:
-        Represents a multiple-choice flashcard question with four choices.
-        correct_choice is stored as a 1-based index (1-4).
-    """
+    """Separate table for the history-quiz question-creation workflow."""
     __tablename__ = "flashcard_questions"
 
     question_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("users.user_id"), nullable=False
-    )
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
     quiz_name: Mapped[str] = mapped_column(String, nullable=False)
     question: Mapped[str] = mapped_column(String, nullable=False)
-
     front_image_filename: Mapped[str | None] = mapped_column(String, nullable=True)
     back_image_filename: Mapped[str | None] = mapped_column(String, nullable=True)
-
     choice1: Mapped[str] = mapped_column(String, nullable=False)
     choice2: Mapped[str] = mapped_column(String, nullable=False)
     choice3: Mapped[str] = mapped_column(String, nullable=False)
@@ -83,30 +97,14 @@ class FlashcardQuestion(db.Model):
     correct_choice: Mapped[int] = mapped_column(Integer, nullable=False)
 
 
-# Functions
 @click.command("init-db")
 def init_db_command():
-    """
-    Input:  None (invoked via `flask init-db` CLI)
-    Output: None
-    Details:
-        Creates all database tables defined by the ORM models.
-        Safe to run multiple times; existing tables are not dropped.
-    """
     db.create_all()
     click.echo("Database initialised.")
 
 
 def init_app(app):
-    """
-    Input:  app (Flask) - the application instance
-    Output: None
-    Details:
-        Binds the SQLAlchemy instance to the app, registers the init-db
-        CLI command, and creates all tables on startup.
-    """
     db.init_app(app)
     app.cli.add_command(init_db_command)
-    # create tables immediately so the app is ready without manual migration
     with app.app_context():
         db.create_all()

@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}{{ deck['title'] }} — Agile Addicts{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="deck-hero">
+    <div class="deck-hero-header">
+      <div class="deck-color-dot" style="background: {{ deck['color'] }}; box-shadow: 0 0 10px {{ deck['color'] }}80;"></div>
+      <div>
+        <a href="{{ url_for('deck.dashboard') }}" style="font-size:0.85rem; color:var(--text-dim);">← All Decks</a>
+        <h1>{{ deck['title'] }}</h1>
+        {% if deck['description'] %}<p>{{ deck['description'] }}</p>{% endif %}
+      </div>
+    </div>
+
+    <div class="deck-actions">
+      {% if cards %}
+      <a href="{{ url_for('deck.study', deck_id=deck['id']) }}" class="btn btn-primary btn-lg">▶ Study Now</a>
+      {% endif %}
+      <a href="{{ url_for('stats.deck_stats', deck_id=deck['id']) }}" class="btn btn-stats">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6" y1="20" x2="6" y2="14"/>
+        </svg>
+        Statistics &amp; Charts
+      </a>
+      <a href="{{ url_for('flashcard.create', deck_id=deck['id']) }}" class="btn btn-secondary">+ Add Card</a>
+      <a href="{{ url_for('deck.edit', deck_id=deck['id']) }}" class="btn btn-ghost">⚙ Edit Deck</a>
+    </div>
+  </div>
+
+  <div class="cards-section">
+    <div class="section-title">{{ cards|length }} Card{{ 's' if cards|length != 1 }}</div>
+
+    {% if cards %}
+    <div class="cards-list">
+      {% for card in cards %}
+      <div class="card-row" style="animation-delay: {{ loop.index0 * 0.04 }}s">
+        <div class="card-row-front">{{ card['front'] }}</div>
+        <div class="card-row-back">{{ card['back'] }}</div>
+        <div class="card-row-actions">
+          <a href="{{ url_for('flashcard.edit', deck_id=deck['id'], card_id=card['id']) }}"
+             class="btn btn-ghost btn-sm">Edit</a>
+          <form method="POST" action="{{ url_for('flashcard.delete', deck_id=deck['id'], card_id=card['id']) }}"
+                class="delete-form" onsubmit="return confirm('Delete this card?')">
+            <button type="submit" class="btn btn-danger btn-sm">✕</button>
+          </form>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">🃏</div>
+      <h3>No cards yet</h3>
+      <p>Add your first flashcard to this deck</p>
+      <a href="{{ url_for('flashcard.create', deck_id=deck['id']) }}" class="btn btn-primary">Add a Card</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
