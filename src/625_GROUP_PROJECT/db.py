@@ -23,10 +23,12 @@ class User(db.Model):
     firstname: Mapped[str] = mapped_column(String, nullable=False)
     lastname: Mapped[str] = mapped_column(String, nullable=False)
     email: Mapped[str] = mapped_column(String, nullable=False, unique=True)
-    password: Mapped[str] = mapped_column(String, nullable=False)
+    password: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[str | None] = mapped_column(String, nullable=True)
     totp_secret: Mapped[str | None] = mapped_column(String, nullable=True)
     totp_enabled: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    oauth_provider: Mapped[str | None] = mapped_column(String, nullable=True)
+    oauth_sub: Mapped[str | None] = mapped_column(String, nullable=True)
 
 
 class Deck(db.Model):
@@ -111,6 +113,7 @@ def init_app(app):
     with app.app_context():
         db.create_all()
         _migrate_totp_columns()
+        _migrate_oauth_columns()
 
 
 def _migrate_totp_columns():
@@ -123,6 +126,65 @@ def _migrate_totp_columns():
             cur.execute("ALTER TABLE users ADD COLUMN totp_secret TEXT")
         if "totp_enabled" not in existing:
             cur.execute("ALTER TABLE users ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0")
+        conn.commit()
+    finally:
+        conn.close()
+
+
+def _migrate_oauth_columns():
+    """Make password nullable and add oauth_provider/oauth_sub.
+
+    SQLite cannot drop NOT NULL via ALTER TABLE, so when password is still
+    NOT NULL we recreate the table with the full target schema.
+    """
+    conn = db.engine.raw_connection()
+    try:
+        cur = conn.cursor()
+        pragma = cur.execute("PRAGMA table_info(users)").fetchall()
+        existing = {row[1] for row in pragma}
+        password_notnull = next((r[3] for r in pragma if r[1] == "password"), 0)
+
+        needs_provider = "oauth_provider" not in existing
+        needs_sub = "oauth_sub" not in existing
+        needs_nullable_pw = password_notnull == 1
+
+        if not (needs_provider or needs_sub or needs_nullable_pw):
+            return
+
+        if needs_nullable_pw:
+            # Recreate the table so password loses its NOT NULL constraint.
+            # Include all columns that exist in the backup so no data is lost.
+            cur.execute("ALTER TABLE users RENAME TO _users_backup")
+            cur.execute("""
+                CREATE TABLE users (
+                    id INTEGER PRIMARY KEY,
+                    username VARCHAR NOT NULL UNIQUE,
+                    firstname VARCHAR NOT NULL,
+                    lastname VARCHAR NOT NULL,
+                    email VARCHAR NOT NULL UNIQUE,
+                    password VARCHAR,
+                    created_at VARCHAR,
+                    totp_secret VARCHAR,
+                    totp_enabled INTEGER NOT NULL DEFAULT 0,
+                    oauth_provider VARCHAR,
+                    oauth_sub VARCHAR
+                )
+            """)
+            backup_cols = [r[1] for r in pragma]
+            new_cols = [
+                "id", "username", "firstname", "lastname", "email",
+                "password", "created_at", "totp_secret", "totp_enabled",
+                "oauth_provider", "oauth_sub",
+            ]
+            copy_cols = ", ".join(c for c in new_cols if c in backup_cols)
+            cur.execute(f"INSERT INTO users ({copy_cols}) SELECT {copy_cols} FROM _users_backup")
+            cur.execute("DROP TABLE _users_backup")
+        else:
+            if needs_provider:
+                cur.execute("ALTER TABLE users ADD COLUMN oauth_provider TEXT")
+            if needs_sub:
+                cur.execute("ALTER TABLE users ADD COLUMN oauth_sub TEXT")
+
         conn.commit()
     finally:
         conn.close()

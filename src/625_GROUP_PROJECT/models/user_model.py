@@ -13,6 +13,8 @@ def _user_to_dict(user):
         'created_at': user.created_at,
         'totp_enabled': user.totp_enabled,
         'totp_secret': user.totp_secret,
+        'oauth_provider': user.oauth_provider,
+        'oauth_sub': user.oauth_sub,
     }
 
 
@@ -41,7 +43,7 @@ def get_user_by_credentials(username, password):
     user = db.session.execute(
         db.select(User).where(User.username == username)
     ).scalar_one_or_none()
-    if user and check_password_hash(user.password, password):
+    if user and user.password and check_password_hash(user.password, password):
         return _user_to_dict(user)
     return None
 
@@ -80,3 +82,28 @@ def enable_totp(user_id, secret):
         user.totp_secret = secret
         user.totp_enabled = 1
         db.session.commit()
+
+
+def upsert_oauth_user(sub, email, firstname, lastname, provider='google'):
+    """Return the User dict for the given OAuth sub, creating it if needed."""
+    user = db.session.execute(
+        db.select(User).where(User.oauth_sub == sub)
+    ).scalar_one_or_none()
+    if user:
+        user.email = email
+        user.firstname = firstname
+        user.lastname = lastname
+        db.session.commit()
+    else:
+        user = User(
+            username=email,
+            email=email,
+            firstname=firstname,
+            lastname=lastname,
+            password=None,
+            oauth_provider=provider,
+            oauth_sub=sub,
+        )
+        db.session.add(user)
+        db.session.commit()
+    return _user_to_dict(user)

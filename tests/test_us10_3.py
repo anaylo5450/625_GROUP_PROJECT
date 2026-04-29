@@ -54,9 +54,8 @@ def test_oauth_callback_flow_with_mocked_exchange(client):
     ):
         resp = client.get('/login/oauth/callback?state=valid-state&code=fakecode')
 
-    assert resp.status_code == 200
-    data = resp.get_json()
-    assert data['sub'] == '999888777'
-    assert data['email'] == 'oauth@example.com'
-    assert data['given_name'] == 'OAuth'
-    assert data['family_name'] == 'User'
+    # callback upserts the user and redirects to dashboard
+    assert resp.status_code == 302
+    assert 'dashboard' in resp.headers['Location']
+    with client.session_transaction() as sess:
+        assert 'user_id' in sess

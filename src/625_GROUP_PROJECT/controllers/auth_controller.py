@@ -5,7 +5,7 @@ from flask_mail import Message
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 from models.user_model import (
     create_user, get_user_by_credentials, get_user_by_email,
-    update_user_password, enable_totp,
+    update_user_password, enable_totp, upsert_oauth_user,
 )
 
 auth_bp = Blueprint('auth', __name__)
@@ -263,11 +263,13 @@ def oauth_callback():
         client_id=current_app.config['GOOGLE_CLIENT_ID'],
         client_secret=current_app.config['GOOGLE_CLIENT_SECRET'],
     )
-    # Task 8 will upsert the local user and create the session here.
-    # For now, surface the profile fields to confirm the flow works.
-    return {
-        'sub': profile.get('sub'),
-        'email': profile.get('email'),
-        'given_name': profile.get('given_name'),
-        'family_name': profile.get('family_name'),
-    }
+    user = upsert_oauth_user(
+        sub=profile['sub'],
+        email=profile['email'],
+        firstname=profile.get('given_name', ''),
+        lastname=profile.get('family_name', ''),
+        provider='google',
+    )
+    session['user_id'] = user['id']
+    session['username'] = user['username']
+    return redirect(url_for('deck.dashboard'))
