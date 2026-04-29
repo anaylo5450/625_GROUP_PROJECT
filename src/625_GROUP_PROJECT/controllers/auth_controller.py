@@ -83,12 +83,34 @@ def login():
         password = request.form.get('password', '')
         user = get_user_by_credentials(username, password)
         if user:
+            if user['totp_enabled']:
+                session['pending_user_id'] = user['id']
+                return redirect(url_for('auth.verify_2fa'))
             session['user_id'] = user['id']
             session['username'] = user['username']
             return redirect(url_for('deck.dashboard'))
         else:
             flash('Invalid username or password.', 'error')
     return render_template('login.html')
+
+
+@auth_bp.route('/login/verify-2fa', methods=['GET', 'POST'])
+def verify_2fa():
+    if 'pending_user_id' not in session:
+        return redirect(url_for('auth.login'))
+    if request.method == 'POST':
+        import pyotp
+        from db import db, User
+        pending_id = session.pop('pending_user_id', None)
+        user = db.session.get(User, pending_id)
+        code = request.form.get('code', '').strip()
+        if user and pyotp.TOTP(user.totp_secret).verify(code):
+            session['user_id'] = user.id
+            session['username'] = user.username
+            return redirect(url_for('deck.dashboard'))
+        flash('Invalid code.', 'error')
+        return render_template('verify_2fa.html')
+    return render_template('verify_2fa.html')
 
 
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
@@ -181,3 +203,71 @@ def confirm_2fa():
         return redirect(url_for('auth.security_settings'))
     flash('Invalid code. Please try again.', 'error')
     return redirect(url_for('auth.security_settings'))
+
+
+# ── OAuth helpers ─────────────────────────────────────────────────────────────
+
+def _exchange_code_for_profile(code, redirect_uri, client_id, client_secret):
+    """Exchange OAuth code for tokens, then fetch and return the userinfo dict."""
+    import json, urllib.request, urllib.parse
+    token_data = json.loads(urllib.request.urlopen(
+        urllib.request.Request(
+            'https://oauth2.googleapis.com/token',
+            data=urllib.parse.urlencode({
+                'code': code,
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'redirect_uri': redirect_uri,
+                'grant_type': 'authorization_code',
+            }).encode(),
+            method='POST',
+        )
+    ).read())
+    profile = json.loads(urllib.request.urlopen(
+        urllib.request.Request(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={'Authorization': f'Bearer {token_data["access_token"]}'},
+        )
+    ).read())
+    return profile
+
+
+# ── OAuth routes ──────────────────────────────────────────────────────────────
+
+@auth_bp.route('/login/oauth/google')
+def oauth_google():
+    import secrets, urllib.parse
+    from flask import current_app
+    state = secrets.token_urlsafe(16)
+    session['oauth_state'] = state
+    params = {
+        'client_id': current_app.config['GOOGLE_CLIENT_ID'],
+        'redirect_uri': url_for('auth.oauth_callback', _external=True),
+        'scope': 'openid email profile',
+        'response_type': 'code',
+        'state': state,
+    }
+    return redirect('https://accounts.google.com/o/oauth2/auth?' + urllib.parse.urlencode(params))
+
+
+@auth_bp.route('/login/oauth/callback')
+def oauth_callback():
+    from flask import current_app
+    state = request.args.get('state', '')
+    if state != session.pop('oauth_state', None):
+        return 'State mismatch', 400
+    code = request.args.get('code', '')
+    profile = _exchange_code_for_profile(
+        code=code,
+        redirect_uri=url_for('auth.oauth_callback', _external=True),
+        client_id=current_app.config['GOOGLE_CLIENT_ID'],
+        client_secret=current_app.config['GOOGLE_CLIENT_SECRET'],
+    )
+    # Task 8 will upsert the local user and create the session here.
+    # For now, surface the profile fields to confirm the flow works.
+    return {
+        'sub': profile.get('sub'),
+        'email': profile.get('email'),
+        'given_name': profile.get('given_name'),
+        'family_name': profile.get('family_name'),
+    }

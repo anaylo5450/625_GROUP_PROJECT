@@ -11,6 +11,8 @@ def _user_to_dict(user):
         'email': user.email,
         'password': user.password,
         'created_at': user.created_at,
+        'totp_enabled': user.totp_enabled,
+        'totp_secret': user.totp_secret,
     }
 
 

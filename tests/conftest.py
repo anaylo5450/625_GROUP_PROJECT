@@ -51,6 +51,8 @@ def app():
         'WTF_CSRF_ENABLED': False,
         'MAIL_SERVER': 'localhost',
         'MAIL_DEFAULT_SENDER': 'test@test.com',
+        'GOOGLE_CLIENT_ID': 'test-google-client-id',
+        'GOOGLE_CLIENT_SECRET': 'test-google-client-secret',
     })
 
     db.init_app(test_app)
