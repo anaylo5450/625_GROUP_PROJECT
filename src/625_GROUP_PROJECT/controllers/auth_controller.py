@@ -238,6 +238,8 @@ def _exchange_code_for_profile(code, redirect_uri, client_id, client_secret):
 def oauth_google():
     import secrets, urllib.parse
     from flask import current_app
+    if not current_app.config.get('GOOGLE_CLIENT_ID') or not current_app.config.get('GOOGLE_CLIENT_SECRET'):
+        return 'Google OAuth is not configured on this server.', 503
     state = secrets.token_urlsafe(16)
     session['oauth_state'] = state
     params = {

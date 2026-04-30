@@ -10,20 +10,13 @@ from controllers.stats_controller import stats_bp
 
 load_dotenv()
 
-_google_client_id = os.environ.get('GOOGLE_CLIENT_ID')
-_google_client_secret = os.environ.get('GOOGLE_CLIENT_SECRET')
-if not _google_client_id or not _google_client_secret:
-    raise ValueError(
-        "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set in .env"
-    )
-
 app = Flask(__name__, template_folder='views/templates')
 app.secret_key = 'flashcard_secret_key_2024'
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.normpath(os.path.join(_HERE, 'flashcards.db'))}"
-app.config['GOOGLE_CLIENT_ID'] = _google_client_id
-app.config['GOOGLE_CLIENT_SECRET'] = _google_client_secret
+app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '')
+app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 
 app.config['MAIL_SERVER']         = 'smtp.gmail.com'
 app.config['MAIL_PORT']           = 587

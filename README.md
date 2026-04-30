@@ -70,12 +70,33 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 # 2. Install dependencies
 pip install -r src/625_GROUP_PROJECT/requirements.txt
 
-# 3. Run the app — must be run from the src/625_GROUP_PROJECT/ directory
+# 3. Copy the example env file and fill in values
+cp .env.example .env
+
+# 4. Run the app — must be run from the src/625_GROUP_PROJECT/ directory
 cd src/625_GROUP_PROJECT
 ../../.venv/bin/python app.py
 ```
 
 Then open **http://localhost:5000** in your browser.
+
+### Environment variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SECRET_KEY` | Yes | Random secret for Flask sessions — generate with `python -c "import secrets; print(secrets.token_hex(32))"` |
+| `GOOGLE_CLIENT_ID` | No | Enables Google OAuth login |
+| `GOOGLE_CLIENT_SECRET` | No | Enables Google OAuth login |
+
+**To enable Google OAuth login:**
+
+1. Open [Google Cloud Console](https://console.cloud.google.com) and create or select a project.
+2. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
+3. Set application type to **Web application**.
+4. Add `http://localhost:5000/login/oauth/callback` under **Authorized redirect URIs**.
+5. Copy the client ID and secret into your `.env` file.
+
+The app runs fine without these — the Google login button will return a 503 until they are set.
 
 The database (`flashcards.db`) is created automatically on first run. If the schema ever gets corrupted, delete `src/625_GROUP_PROJECT/flashcards.db` and restart — it will be recreated from scratch.
 
