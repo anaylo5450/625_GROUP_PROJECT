@@ -126,3 +126,59 @@ def get_shared_decks(user_id):
     ).fetchall()
     conn.close()
     return decks
+
+def get_public_decks(search_query=None):
+    """Return public decks, optionally filtered by title, tags, or description."""
+    conn = get_db()
+
+    if search_query:
+        like_query = f"%{search_query}%"
+
+        decks = conn.execute(
+            '''
+            SELECT d.*, u.username, COUNT(f.id) as card_count
+            FROM decks d
+            JOIN users u ON d.user_id = u.id
+            LEFT JOIN flashcards f ON f.deck_id = d.id
+            WHERE d.visibility IN ('1', 1)
+              AND (
+                    d.tags LIKE ?
+                 OR d.description LIKE ?
+                 OR d.title LIKE ?
+                 OR u.username LIKE ?
+              )
+            GROUP BY d.id
+            ORDER BY 
+                CASE
+                    WHEN d.tags LIKE ? THEN 1
+                    WHEN d.description LIKE ? THEN 2
+                    WHEN d.title LIKE ? THEN 3
+                    ELSE 4
+                END,
+                d.updated_at DESC
+            ''',
+            (
+                like_query,
+                like_query,
+                like_query,
+                like_query,
+                like_query,
+                like_query,
+                like_query
+            )
+        ).fetchall()
+    else:
+        decks = conn.execute(
+            '''
+            SELECT d.*, u.username, COUNT(f.id) as card_count
+            FROM decks d
+            JOIN users u ON d.user_id = u.id
+            LEFT JOIN flashcards f ON f.deck_id = d.id
+            WHERE d.visibility IN ('1', 1)
+            GROUP BY d.id
+            ORDER BY d.updated_at DESC
+            '''
+        ).fetchall()
+
+    conn.close()
+    return decks

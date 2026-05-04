@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from controllers.auth_controller import login_required
 from models.deck_model import (get_decks_by_user, get_deck_by_id, get_deck_by_id_for_user,
                                get_public_deck, create_deck, update_deck, delete_deck,
-                               share_deck, unshare_deck, get_shares_for_deck, get_shared_decks)
+                               share_deck, unshare_deck, get_shares_for_deck, get_shared_decks, get_public_decks)
 from models.flashcard_model import get_cards_by_deck
 from models.user_model import get_user_by_username
 
@@ -16,6 +16,18 @@ def dashboard():
     decks = get_decks_by_user(session['user_id'])
     shared = get_shared_decks(session['user_id'])
     return render_template('dashboard.html', decks=decks, shared=shared)
+
+@deck_bp.route('/public')
+@login_required
+def public_decks():
+    search_query = request.args.get('q', '').strip()
+    decks = get_public_decks(search_query)
+
+    return render_template(
+        'public_decks.html',
+        decks=decks,
+        search_query=search_query
+    )
 
 @deck_bp.route('/deck/create', methods=['GET', 'POST'])
 @login_required
@@ -135,13 +147,26 @@ def public_view(deck_id):
 @login_required
 def study(deck_id):
     deck = get_deck_by_id_for_user(deck_id, session['user_id'])
+
+    # If the user does not own the deck and it was not directly shared,
+    # still allow study access if the deck is public.
+    if not deck:
+        deck = get_public_deck(deck_id)
+
     if not deck:
         flash('Deck not found.', 'error')
         return redirect(url_for('deck.dashboard'))
+
     cards = get_cards_by_deck(deck_id)
+
     if not cards:
         flash('Add some cards before studying!', 'error')
+
+        if str(deck['visibility']) == '1':
+            return redirect(url_for('deck.public_view', deck_id=deck_id))
+
         return redirect(url_for('deck.view_deck', deck_id=deck_id))
-    # Convert sqlite3.Row objects to plain dicts so tojson works in template
+
     cards_list = [dict(c) for c in cards]
+
     return render_template('study.html', deck=dict(deck), cards=cards_list)

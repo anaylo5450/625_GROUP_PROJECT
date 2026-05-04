@@ -1,8 +1,7 @@
 from flask import Blueprint, render_template, request, jsonify, session, redirect, url_for
 from controllers.auth_controller import login_required
 from models.stats_model import create_session, finish_session, get_deck_stats, get_user_stats
-from models.deck_model import get_deck_by_id_for_user
-
+from models.deck_model import get_deck_by_id_for_user, get_public_deck
 stats_bp = Blueprint('stats', __name__)
 
 @stats_bp.route('/stats')
@@ -20,6 +19,10 @@ def overview():
 @login_required
 def deck_stats(deck_id):
     deck = get_deck_by_id_for_user(deck_id, session['user_id'])
+
+    if not deck:
+        deck = get_public_deck(deck_id)
+
     if not deck:
         return redirect(url_for('deck.dashboard'))
 

@@ -3,12 +3,16 @@
 {% block content %}
 <div class="container">
   <div class="page-header">
-    <div>
-      <h1>My <span class="serif-italic">Decks</span></h1>
-      <p>{{ decks|length }} deck{{ 's' if decks|length != 1 }} in your library</p>
-    </div>
+  <div>
+    <h1>My <span class="serif-italic">Decks</span></h1>
+    <p>{{ decks|length }} deck{{ 's' if decks|length != 1 }} in your library</p>
+  </div>
+
+  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+    <!--<a href="{{ url_for('deck.public_decks') }}" class="btn btn-secondary">Public Decks</a>-->
     <a href="{{ url_for('deck.create') }}" class="btn btn-primary">+ New Deck</a>
   </div>
+</div>
 
   <div class="stats-row">
     <div class="stat-chip"><strong>{{ decks|length }}</strong> Decks</div>

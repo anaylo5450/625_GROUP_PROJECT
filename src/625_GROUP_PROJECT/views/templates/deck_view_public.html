@@ -1,25 +1,7 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ deck['title'] }} — Agile Addicts</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🃏</text></svg>">
-</head>
-<body>
-  <nav class="navbar">
-    <div class="navbar-inner">
-      <a href="{{ url_for('auth.login') }}" class="navbar-brand">
-        <span class="dot"></span>
-        Agile Addicts
-      </a>
-      <ul class="navbar-nav">
-        <li><a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-sm">Sign in</a></li>
-      </ul>
-    </div>
-  </nav>
+{% extends 'base.html' %}
+{% block title %}{{ deck['title'] }} — Public Deck{% endblock %}
 
+{% block content %}
 <div class="container" style="padding-top: 40px; padding-bottom: 60px;">
   <div class="deck-hero">
     <div class="deck-hero-header">
@@ -30,8 +12,14 @@
         {% if deck['description'] %}<p>{{ deck['description'] }}</p>{% endif %}
       </div>
     </div>
+
     <div class="deck-actions">
-      <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-lg">Sign in to Study</a>
+      <a href="{{ url_for('deck.dashboard') }}" class="btn btn-ghost">My Decks</a>
+      <a href="{{ url_for('deck.public_decks') }}" class="btn btn-secondary">Public Decks</a>
+
+      {% if cards %}
+      <a href="{{ url_for('deck.study', deck_id=deck['id']) }}" class="btn btn-primary btn-lg">▶ Study Now</a>
+      {% endif %}
     </div>
   </div>
 
@@ -72,5 +60,4 @@
     document.getElementById('toggleAnswers').textContent = answersVisible ? 'Hide Answers' : 'Show Answers';
   }
 </script>
-</body>
-</html>
+{% endblock %}

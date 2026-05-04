@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Public Decks — Agile Addicts{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="page-header">
+    <div>
+      <h1>Public <span class="serif-italic">Decks</span></h1>
+      <p>{{ decks|length }} public deck{{ 's' if decks|length != 1 }} available</p>
+    </div>
+
+    <a href="{{ url_for('deck.dashboard') }}" class="btn btn-secondary">← My Decks</a>
+  </div>
+  
+<div class="cards-section" style="margin-bottom: 28px;">
+  <div class="section-title">Search Public Decks</div>
+
+  <form method="GET" action="{{ url_for('deck.public_decks') }}"
+        style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+    <input type="text"
+           name="q"
+           value="{{ search_query or '' }}"
+           placeholder="Search by tag, description, title, or username"
+           style="flex:1; min-width:220px; background:var(--surface-2); border:1px solid var(--border);
+                  border-radius:var(--radius-sm); padding:10px 14px; color:var(--text); font-size:0.9rem;">
+
+    <button type="submit" class="btn btn-primary">Search</button>
+
+    {% if search_query %}
+    <a href="{{ url_for('deck.public_decks') }}" class="btn btn-ghost">Clear</a>
+    {% endif %}
+  </form>
+</div>
+
+  <div class="decks-grid">
+    {% if decks %}
+      {% for deck in decks %}
+      <a href="{{ url_for('deck.public_view', deck_id=deck['id']) }}" class="deck-card" style="animation-delay: {{ loop.index0 * 0.05 }}s">
+        <div class="deck-card-header" style="background: {{ deck['color'] }}20;">
+          <div class="deck-card-icon" style="color: {{ deck['color'] }}">🃏</div>
+        </div>
+
+        <div class="deck-card-body">
+          <div class="deck-card-title">{{ deck['title'] }}</div>
+          <div class="deck-card-desc">{{ deck['description'] or 'No description' }}</div>
+
+          <div class="deck-card-meta">
+            <span class="card-count-badge">{{ deck['card_count'] }} card{{ 's' if deck['card_count'] != 1 }}</span>
+            <span>View →</span>
+          </div>
+
+          {% if deck['username'] %}
+          <div style="margin-top:8px; font-size:0.8rem; color:var(--text-dim);">
+            Created by {{ deck['username'] }}
+          </div>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🌎</div>
+        <h3>No public decks yet</h3>
+        <p>No decks have been set to public yet.</p>
+        <a href="{{ url_for('deck.dashboard') }}" class="btn btn-primary">Back to My Decks</a>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
