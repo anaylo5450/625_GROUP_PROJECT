@@ -16,7 +16,8 @@ A full-featured flashcard web application built with **Python (Flask)**, **SQLit
 - **Study Mode** — fullscreen study session with progress bar and correct/incorrect tracking
 - **Answer Privacy** — answers hidden by default on deck view; toggle to reveal before studying
 - **Deck Sharing** — share decks with other users by username; shared decks appear in their dashboard and are fully studyable
-- **Public Decks** — set a deck to public to get a shareable link anyone can view without logging in
+- **Public Decks** — set a deck to public; browsable in a community gallery and viewable by anyone via direct link without login
+- **Public Deck Gallery** — browse all public decks from other users from the navigation bar
 - **Session Stats** — study session results stored automatically; stats overview and per-deck history
 - **Dark theme UI** — polished design with Instrument Serif + DM Sans typography
 
@@ -46,9 +47,15 @@ src/625_GROUP_PROJECT/
 │   ├── base.html                 # Navbar, flash messages layout
 │   ├── login.html
 │   ├── register.html
+│   ├── forgot_password.html      # Password reset request form
+│   ├── reset_password.html       # Password reset form (from email link)
+│   ├── security_settings.html   # 2FA enrollment page
+│   ├── verify_2fa.html          # TOTP code entry
 │   ├── dashboard.html            # Deck grid overview
 │   ├── deck_form.html            # Create / edit deck
-│   ├── deck_view.html            # Deck detail with card list
+│   ├── deck_view.html            # Deck detail with card list (owner view)
+│   ├── deck_view_public.html     # Public-facing deck view, no auth required (Sprint 3)
+│   ├── public_decks.html         # Browse all public decks gallery (Sprint 3)
 │   ├── card_form.html            # Create / edit flashcard (with live flip preview)
 │   ├── study.html                # Study session with flip animation
 │   ├── stats_overview.html       # User-wide stats (Sprint 2)
@@ -78,7 +85,7 @@ cd src/625_GROUP_PROJECT
 ../../.venv/bin/python app.py
 ```
 
-Then open **http://localhost:5000** in your browser.
+Then open **http://localhost:5001** in your browser.
 
 ### Environment variables
 
@@ -93,7 +100,7 @@ Then open **http://localhost:5000** in your browser.
 1. Open [Google Cloud Console](https://console.cloud.google.com) and create or select a project.
 2. Go to **APIs & Services → Credentials → Create Credentials → OAuth client ID**.
 3. Set application type to **Web application**.
-4. Add `http://localhost:5000/login/oauth/callback` under **Authorized redirect URIs**.
+4. Add `http://localhost:5001/login/oauth/callback` under **Authorized redirect URIs**.
 5. Copy the client ID and secret into your `.env` file.
 
 The app runs fine without these — the Google login button will return a 503 until they are set.
@@ -130,8 +137,8 @@ Schema migrations run automatically on every startup via `migrate_decks()` and `
 | Sprint | Stories | Points | Status |
 |--------|---------|--------|--------|
 | Sprint 1 | US-1 (auth), US-2 (login), US-3 (create deck), US-4 (update deck), US-5.1–5.3 (flashcard CRUD) | 19 planned + US-4 bonus | Complete |
-| Sprint 2 | US-5.4–5.6 (image upload), US-6.6 (card frequency), US-7 (stats display), US-9 (password reset), US-11 (deck sharing) | 27+ | In progress |
-| Sprint 3 | US-7 remaining, polish, stretch goals | 11+ | Not started |
+| Sprint 2 | US-5.4–5.6 (image upload), US-6.6 (card frequency), US-7 (stats display), US-9 (password reset), US-11 (deck sharing) | 27+ | Complete |
+| Sprint 3 | Public deck browsing, deck model expansion, stats controller updates, dashboard polish | 11+ | In progress |
 
 Scrum board: [GitHub Projects #2](https://github.com/users/anaylo5450/projects/2)
 
