@@ -13,6 +13,13 @@ def _row_factory(cursor, row):
 def get_db():
     conn = db.engine.raw_connection()
     conn.driver_connection.row_factory = _row_factory
+    _orig_close = conn.close
+
+    def _close():
+        conn.driver_connection.row_factory = None
+        _orig_close()
+
+    conn.close = _close
     return conn
 
 
