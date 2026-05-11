@@ -14,7 +14,9 @@ app = Flask(__name__, template_folder='views/templates')
 app.secret_key = 'flashcard_secret_key_2024'
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.normpath(os.path.join(_HERE, 'flashcards.db'))}"
+_INSTANCE = os.path.normpath(os.path.join(_HERE, '..', 'instance'))
+os.makedirs(_INSTANCE, exist_ok=True)
+app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(_INSTANCE, 'flashcards.db')}"
 app.config['GOOGLE_CLIENT_ID'] = os.environ.get('GOOGLE_CLIENT_ID', '')
 app.config['GOOGLE_CLIENT_SECRET'] = os.environ.get('GOOGLE_CLIENT_SECRET', '')
 

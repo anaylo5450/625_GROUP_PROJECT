@@ -76,13 +76,12 @@ def register():
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if 'user_id' in session:
-        return redirect(url_for('deck.dashboard'))
     if request.method == 'POST':
         username = request.form.get('username', '').strip()
         password = request.form.get('password', '')
         user = get_user_by_credentials(username, password)
         if user:
+            session.clear()
             if user['totp_enabled']:
                 session['pending_user_id'] = user['id']
                 return redirect(url_for('auth.verify_2fa'))
