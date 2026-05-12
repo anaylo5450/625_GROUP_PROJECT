@@ -28,12 +28,9 @@ def deck_stats(deck_id):
 
     sessions, summary, daily_progress = get_deck_stats(deck_id, session['user_id'])
 
-    labels = [row['study_day'] for row in daily_progress]
-    scores = [
-        int(row['score_percent'])
-        for row in daily_progress
-        if row.get('score_percent') is not None
-    ]
+    valid_progress = [row for row in daily_progress if row.get('score_percent') is not None]
+    labels = [row['study_day'] for row in valid_progress]
+    scores = [int(row['score_percent']) for row in valid_progress]
 
     return render_template(
         'stats_deck.html',

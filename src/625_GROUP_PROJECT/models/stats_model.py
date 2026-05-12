@@ -1,12 +1,14 @@
+from datetime import datetime, timezone
 from models.database import get_db
 
 def create_session(user_id, deck_id, cards_total):
     conn = get_db()
+    now = datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
     cursor = conn.execute(
         '''INSERT INTO study_sessions
-           (user_id, deck_id, cards_total, cards_seen, cards_correct, cards_wrong, duration_seconds, completed)
-           VALUES (?, ?, ?, 0, 0, 0, 0, 0)''',
-        (user_id, deck_id, cards_total)
+           (user_id, deck_id, cards_total, cards_seen, cards_correct, cards_wrong, duration_seconds, completed, started_at)
+           VALUES (?, ?, ?, 0, 0, 0, 0, 0, ?)''',
+        (user_id, deck_id, cards_total, now)
     )
     session_id = cursor.lastrowid
     conn.commit()
